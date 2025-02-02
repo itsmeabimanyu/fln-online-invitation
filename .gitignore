@@ -1,0 +1,58 @@
+# Python
+*.py[cod]
+__pycache__/
+*.pyo
+*.pyd
+*.pyc
+
+# Django
+*.sqlite3
+*.log
+*.db
+
+# Environment
+.env
+.venv/
+env/
+venv/
+env.bak/
+venv.bak/
+
+# Static files
+# /static/
+media/
+
+# IDE and editor settings
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# Backup files
+*~
+*.bak
+
+# Coverage reports
+.coverage
+coverage.xml
+htmlcov/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Other
+*.egg-info/
+dist/
+build/
