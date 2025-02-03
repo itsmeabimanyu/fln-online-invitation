@@ -9,12 +9,21 @@ from .models import Event
 class EventForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ["event_date", "event_name", "location", "description"]
+        fields = ["image", "event_name", "location", "maps_location", "description", "from_event_date", "to_event_date" ]
         widgets = {
+            'image': forms.ClearableFileInput(attrs={
+                'id': 'imageInput',  # ID untuk input gambar
+                'onchange': 'previewImage(event)',  # Menambahkan event onchange
+            }),
             'event_name': forms.Textarea(attrs={'rows': 2}),
-            'event_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'from_event_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'to_event_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'location': forms.Textarea(attrs={'rows': 2}),  # Batasi textarea menjadi 2 baris
-            'description': forms.Textarea(attrs={'rows': 3}),
+            'maps_location': forms.Textarea(attrs={'rows': 2}),
+            'description': forms.Textarea(attrs={'rows': 2}),
+        }
+        labels = {
+            'maps_location': 'Maps location (optional)'
         }
 
     def __init__(self, *args, **kwargs):

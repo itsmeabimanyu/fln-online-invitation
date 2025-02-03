@@ -1,0 +1,50 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+
+<h1 class="h3 mb-3">{{ title }}</h1>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title">Input</h5>
+        <!-- <h6 class="card-subtitle text-muted">Notyf is a minimalistic JavaScript library for toast notifications. See official
+            documentation <a href="https://github.com/caroso1222/notyf" target="_blank" rel="noopener noreferrer nofollow">here</a>.
+        </h6> -->
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <div class="card-body">
+            <div class="row">
+                {% for field in form %}
+                {% if forloop.counter0|divisibleby:2 and not forloop.first %}
+                    <!-- Start a new column for every second field -->
+                    </div>
+                    <div class="row">
+                {% endif %}
+                <div class="col-md-6 mb-2">
+                    <div class="row">
+                    <div class="col-md-4 field-key">
+                        {{ field.label|title }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ field }}
+                        {% if field.errors %}
+                        <div><small class="form-text text-danger">{{ field.errors.0 }}</small></div>
+                        {% endif %}
+                    </div> 
+                    <div class="col-md-4">
+                        {% if field.help_text %}
+                        <span data-bs-toggle="tooltip" title="{{ field.help_text }}"><i class="fas fa-info-circle"></i></span>
+                        {% endif %}
+                    </div> 
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="card-footer m-3">
+            <button type="submit" class="btn btn-success" id="confirm">Submit</button>
+            <button class="btn btn-primary" type="button" onclick="window.history.back();">Back</button>
+        </div>
+    </form>
+</div>
+{% endblock content %}

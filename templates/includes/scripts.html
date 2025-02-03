@@ -1,6 +1,53 @@
 {% load static %}
 <script src="{% static 'js/app.js' %}"></script>
 <script>
+    $(document).ready(function() {
+        $('#employeeTable').DataTable();
+    });
+</script>
+<script>
+    function previewImage(event) {
+        var input = event.target;
+        var preview = document.getElementById("preview");
+
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var img = new Image();
+                img.onload = function() {
+                    var canvas = document.createElement("canvas");
+                    var ctx = canvas.getContext("2d");
+
+                    // Calculate the crop area for 16:9 ratio
+                    var cropWidth = img.width;
+                    var cropHeight = img.width * 9 / 16;
+
+                    if (cropHeight > img.height) {
+                        cropHeight = img.height;
+                        cropWidth = img.height * 16 / 9;
+                    }
+
+                    var cropX = (img.width - cropWidth) / 2;
+                    var cropY = (img.height - cropHeight) / 2;
+
+                    // Set canvas size to 16:9 aspect ratio
+                    canvas.width = cropWidth;
+                    canvas.height = cropHeight;
+
+                    // Draw the cropped area on the canvas
+                    ctx.drawImage(img, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+
+                    // Display the cropped image as the preview
+                    preview.src = canvas.toDataURL();
+                    preview.style.display = "block";
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+<script>
     document.addEventListener("DOMContentLoaded", function() {
         var ctx = document.getElementById("chartjs-dashboard-line").getContext("2d");
         var gradient = ctx.createLinearGradient(0, 0, 0, 225);
