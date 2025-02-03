@@ -47,12 +47,14 @@ class Event(models.Model):
     event_name = models.TextField()
     from_event_date = models.DateTimeField()
     to_event_date = models.DateTimeField()
-    description = models.TextField()
+    # description = models.TextField()
     location = models.TextField()
     maps_location = models.TextField(blank=True, null=True)
     # event_type = models.CharField(max_length=50)  # e.g., "Wedding", "Conference"
     image = models.ImageField(upload_to='images/', null=True, blank=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.event_name

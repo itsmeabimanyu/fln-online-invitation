@@ -1,104 +1,103 @@
 {% extends 'layouts/base.html' %}
 {% block content %}
 {% load static %}
-<div class="container-fluid p-0">
-    <div class="row mb-2 mb-xl-3">
-        <div class="col-auto d-none d-sm-block">
-            <h3><strong>{{ title }}</strong> List</h3>
-        </div>
-
-        <div class="col-auto ms-auto text-end mt-n1">
-            <!-- <a href="#" class="btn btn-light bg-white me-2">Invite a Friend</a> -->
-            <a href="{% url 'event_create' %}" class="btn btn-success">New Event</a>
-        </div>
+<div class="row mb-2 mb-xl-3">
+    <div class="col-auto d-none d-sm-block">
+        <h3><strong>{{ title }}</strong> List</h3>
     </div>
-    <div class="row">
-        {% for item in items_list %}
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                <div class="card mb-4 shadow-sm">
-                    {% if item.image %}
-                        <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.name }}">
-                    {% else %}
-                        <img src="{% static 'images/default.jpeg' %}" class="card-img-top" alt="Placeholder image">
-                    {% endif %}
-                    <div class="card-body">
-                        <p class="h4 card-text"><strong>{{ item.event_name }}</strong></p>
-                        <p class="card-text">{{ item.description|slice:":100" }} ...</p>
-                        <div class="row mb-2">
-                            <div class="col-1">
-                                <div class="row">
-                                    <p class="card-text"><i class="align-middle me-2" data-feather="calendar"></i></p>
-                                </div>
-                            </div>
-                            <div class="col-5 col-md-5">
-                                <div class="row">
-                                    <div class="text-md text-muted">From</div>
-                                </div>
-                                <div class="row">
-                                    <p class="text-md"><strong>{{ item.from_event_date|date:"j M Y" }}</strong></p>
-                                </div>
-                            </div>
-                            <div class="col-5 col-md-5">
-                                <div class="row">
-                                    <div class="text-md text-muted">To</div>
-                                </div>
-                                <div class="row">
-                                    <p class="text-md"><strong>{{ item.from_event_date|date:"j M Y" }}</strong></p>
-                                </div>
-                            </div>
+    <div class="col-auto ms-auto text-end mt-n1">
+        <a href="{% url 'event_create' %}" class="btn btn-success">New Event</a>
+    </div>
+</div>
+<div class="row">
+    {% for item in items_list %}
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex align-items-stretch">
+        <div class="card mb-4 shadow-sm ">
+            {% if item.image %}
+                <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.name }}">
+            {% else %}
+                <img src="{% static 'images/default.jpeg' %}" class="card-img-top" alt="Placeholder image">
+            {% endif %}
+            <div class="card-body">
+                <div class="row mb-3">
+                    <p class="h4 card-text"><strong>{{ item.event_name|slice:":100" }}</strong></p>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-1">
+                        <div class="row">
+                            <p class="card-text"><i class="align-middle me-2" data-feather="calendar"></i></p>
                         </div>
-                        <div class="row mb-2">
-                            <div class="col-1">
-                                <div class="row">
-                                    <p class="card-text"><i class="align-middle me-2" data-feather="clock"></i></p>
-                                </div>
-                            </div>
-                            <div class="col-10">
-                                <div class="row">
-                                    <div class="text-md text-muted">Time</div>
-                                </div>
-                                <div class="row">
-                                    <p class="text-md"><strong>{{ item.from_event_date|date:"g:i A" }} - {{ item.to_event_date|date:"g:i A" }}</strong></p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-1">
-                                <div class="row">
-                                    <p class="card-text"><i class="align-middle me-2" data-feather="map-pin"></i></p>
-                                </div>
-                            </div>
-                            <div class="col-5 col-md-5">
-                                <div class="row">
-                                    <div class="text-md text-muted">Location</div>
-                                </div>
-                                <div class="row">
-                                    <p class="text-md"><strong>{{ item.location|title }}</strong></p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- <a href="{% url 'event_update' item.id %}" class="btn btn-primary">Edit</a> -->
                     </div>
-                    <div class="card-footer">
-                        <div class="card-actions float-end">
-                            <div class="dropdown position-relative">
-                                <a href="#" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="true" class="show">
-                                    <i class="align-middle" data-feather="more-horizontal"></i> 
-                                </a>
-                                <div class="dropdown-menu dropdown-menu-end" data-bs-popper="static">
-                                    <a class="dropdown-item" href="{{ item.update_url }}">Edit</a>
-                                    <form method="post" action="{{ item.delete_url }}" onsubmit="return confirm('Are you sure you want to delete this item?');">
-                                        {% csrf_token %}
-                                        <button type="submit" class="dropdown-item text-danger">Delete</button>
-                                    </form>
-                                    <!-- <a class="dropdown-item" href="#">Something else here</a> -->
-                                </div>
-                            </div>
+                    <div class="col-5 col-md-5">
+                        <div class="row">
+                            <div class="text-md text-muted">From</div>
+                        </div>
+                        <div class="row">
+                            <p class="text-md"><strong>{{ item.from_event_date|date:"j M Y" }}</strong></p>
+                        </div>
+                    </div>
+                    <div class="col-5 col-md-5">
+                        <div class="row">
+                            <div class="text-md text-muted">To</div>
+                        </div>
+                        <div class="row">
+                            <p class="text-md"><strong>{{ item.from_event_date|date:"j M Y" }}</strong></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-1">
+                        <div class="row">
+                            <p class="card-text"><i class="align-middle me-2" data-feather="clock"></i></p>
+                        </div>
+                    </div>
+                    <div class="col-10">
+                        <div class="row">
+                            <div class="text-md text-muted">Time</div>
+                        </div>
+                        <div class="row">
+                            <p class="text-md"><strong>{{ item.from_event_date|date:"g:i A" }} - {{ item.to_event_date|date:"g:i A" }}</strong></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-1">
+                        <div class="row">
+                            <p class="card-text"><i class="align-middle me-2" data-feather="map-pin"></i></p>
+                        </div>
+                    </div>
+                    <div class="col-5 col-md-5">
+                        <div class="row">
+                            <div class="text-md text-muted">Location</div>
+                        </div>
+                        <div class="row">
+                            <p class="text-md"><strong>{{ item.location|title }}</strong></p>
+                        </div>
+                    </div>
+                </div>
+                <!-- <a href="{% url 'event_update' item.id %}" class="btn btn-primary">Edit</a> -->
+            </div>
+            <div class="card-footer">
+                <div class="card-actions float-end">
+                    <div class="dropdown position-relative">
+                        <a href="#" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="true" class="show">
+                            <i class="align-middle" data-feather="more-horizontal"></i> 
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end" data-bs-popper="static">
+                            <a class="dropdown-item" href="{{ item.update_url }}">Edit</a>
+                            <form method="post" action="{{ item.delete_url }}" onsubmit="return confirm('Are you sure you want to delete this item?');">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item text-danger">Delete</button>
+                            </form>
+                            <a class="dropdown-item" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">Something else here</a>
                         </div>
                     </div>
                 </div>
             </div>
-        {% endfor %}
+        </div>
     </div>
+    {% endfor %}
 </div>
 {% endblock content %}
+
+
