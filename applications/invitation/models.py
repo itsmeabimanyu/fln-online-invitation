@@ -13,7 +13,7 @@ class Event(models.Model):
     event_name = models.TextField()
     from_event_date = models.DateTimeField()
     to_event_date = models.DateTimeField()
-    # description = models.TextField()
+    description = models.TextField(blank=True, null=True)
     location = models.TextField()
     maps_location = models.TextField(blank=True, null=True)
     # event_type = models.CharField(max_length=50)  # e.g., "Wedding", "Conference"
@@ -76,6 +76,7 @@ class Event(models.Model):
             
         super().save(*args, **kwargs)
 
+"""
 class Organization(models.Model):
     # Informasi instansi
     name = models.CharField(max_length=255, verbose_name="Nama Instansi")
@@ -87,11 +88,13 @@ class Organization(models.Model):
 
     def __str__(self):
         return self.name
+"""
 
-class Guest(models.Model):
+class Participant(models.Model):
     # Informasi tamu
     invitation = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="guests", verbose_name="Undangan")
-    organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="Instansi")
+    # organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="Instansi")
+    organization = models.CharField(max_length=255, blank=True, null=True, verbose_name="Instansi")
     guest_name = models.CharField(max_length=255, verbose_name="Nama Tamu")
     guest_email = models.EmailField(validators=[EmailValidator()], verbose_name="Email Tamu")
     is_attending = models.BooleanField(default=False, verbose_name="Hadir?")

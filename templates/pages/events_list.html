@@ -15,17 +15,42 @@
     <div class="row">
         {% for item in items_list %}
         <div class="col-12 col-xs-12 col-sm-12 col-md-6 col-lg-4 col-xl-3 d-flex">
-            <div class="card mb-4 shadow-sm">
+            <div class="card mb-4 border {% if not item.is_active  %}bg-secondary bg-opacity-50{% endif %}">
                 {% if item.image %}
                 <img src="{{ item.image.url }}" class="card-img-top {% if not item.is_active %}opacity-25{% endif %}" alt="{{ item.name }}">
                 {% else %}
                 <img src="{% static 'images/default_1280_720.jpg' %}" class="card-img-top" alt="Placeholder image">
                 {% endif %}
-                <div class="card-body {% if not item.is_active  %}bg-secondary bg-opacity-25{% endif %}">
-                    <div class="row mb-4">
-                        <p class="h4 card-text"><strong>{{ item.event_name }}</strong></p>
+                <!-- <div class="card-img-container">
+                    <img src="{% static 'images/default_1280_720.jpg' %}" class="card-img-top" alt="Event Image">
+                    <div class="text-overlay text-danger">Event Name</div>
+                </div> -->
+                <div class="card-header px-4 pt-4 {% if not item.is_active  %}bg-secondary bg-opacity-25{% endif %}">
+                    <div class="card-actions float-end">
+                        <!-- Dropdown di sebelah kanan -->
+                        <div class="dropdown">
+                            <a href="#" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="true" class="show">
+                                <i class="align-middle" data-feather="more-horizontal"></i> 
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end" data-bs-popper="static">
+                                <!-- <a class="dropdown-item" href="{{ item.update_url }}">Edit</a> -->
+                                <a href="#" data-micromodal-trigger="modal-{{ item.id }}" class="dropdown-item">Edit</a>
+                                <form method="post" action="{{ item.close_url }}" onsubmit="return confirm('Are you sure you want to {% if item.is_active %}close{% else %}open{% endif %} this event?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item">{% if item.is_active %}Close event{% else %}Open event{% endif %}</button>
+                                </form>
+                                <form method="post" action="{{ item.delete_url }}" onsubmit="return confirm('Are you sure you want to delete this event?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item text-danger">Delete</button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
-                    <div class="row mb-2">
+                    <p class="h4 card-text"><strong>{{ item.event_name }}</strong></p>
+                    {% if item.description %}<p>{{ item.description|slice:"100" }}</p>{% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="row">
                         <div class="col-1">
                             <div class="row">
                                 <p class="card-text"><i class="align-middle me-2" data-feather="calendar"></i></p>
@@ -85,26 +110,7 @@
                         <!-- Badge di sebelah kiri -->
                         <span class="badge {% if item.is_active %}bg-success{% else %}bg-danger{% endif %}">
                             {% if item.is_active %}Active{% else %}Inactive{% endif %}
-                        </span>
-                        
-                        <!-- Dropdown di sebelah kanan -->
-                        <div class="dropdown">
-                            <a href="#" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="true" class="show">
-                                <i class="align-middle" data-feather="more-horizontal"></i> 
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end" data-bs-popper="static">
-                                <!-- <a class="dropdown-item" href="{{ item.update_url }}">Edit</a> -->
-                                <a href="#" data-micromodal-trigger="modal-{{ item.id }}" class="dropdown-item">Edit</a>
-                                <form method="post" action="{{ item.close_url }}" onsubmit="return confirm('Are you sure you want to {% if item.is_active %}close{% else %}open{% endif %} this event?');">
-                                    {% csrf_token %}
-                                    <button type="submit" class="dropdown-item">{% if item.is_active %}Close event{% else %}Open event{% endif %}</button>
-                                </form>
-                                <form method="post" action="{{ item.delete_url }}" onsubmit="return confirm('Are you sure you want to delete this event?');">
-                                    {% csrf_token %}
-                                    <button type="submit" class="dropdown-item text-danger">Delete</button>
-                                </form>
-                            </div>
-                        </div>
+                        </span> 
                     </div>
                 </div>
             </div>

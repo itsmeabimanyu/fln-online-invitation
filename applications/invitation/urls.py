@@ -5,11 +5,10 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     # URL for listing events
-    # path('events/', views.EventListView.as_view(), name='event_list'),
-    path('', views.CompanyCreateView.as_view(), name='company_create'),
     path('events/create/', views.EventCreateView.as_view(), name='event_create'),
     path('events/list/', views.EventListView.as_view(), name='event_list'),
     path('events/update/<uuid:pk>/', views.EventUpdateView.as_view(), name='event_update'),
-     path('events/delete/<uuid:pk>/', views.SoftDeleteEventView.as_view(), name='event_delete'),
-     path('events/close/<uuid:pk>/', views.CloseEventView.as_view(), name='event_close'),
+    path('events/delete/<uuid:pk>/', views.SoftDeleteEventView.as_view(), name='event_delete'),
+    path('events/close/<uuid:pk>/', views.CloseEventView.as_view(), name='event_close'),
+    path('participants/list/', views.ParticipantListView.as_view(), name='participant_list'),
 ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

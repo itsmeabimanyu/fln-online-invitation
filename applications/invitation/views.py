@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, UpdateView, View, CreateView
-from .models import Event, Organization
+from .models import Event, Participant
 from .forms import EventForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 import os
@@ -59,7 +59,7 @@ class EventListView(ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        return queryset.filter(deleted_at__isnull=True).order_by('from_event_date')
+        return queryset.filter(deleted_at__isnull=True).order_by('-is_active', 'from_event_date')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -96,14 +96,14 @@ class EventUpdateView(UpdateView):
                     os.remove(old_image_path)  # Hapus gambar lama
         return super().form_valid(form)
     
-class SoftDeleteEventView(View): # checked 04/01/25
+class SoftDeleteEventView(View):
     def post(self, request, pk):
         item = get_object_or_404(Event, pk=pk)
         item.soft_delete() 
         # return redirect(self.request.META.get('HTTP_REFERER'))
         return redirect('event_list')
 
-class CloseEventView(View): # checked 04/01/25
+class CloseEventView(View):
     def post(self, request, pk):
         item = get_object_or_404(Event, pk=pk)
         if item.is_active:
@@ -112,9 +112,20 @@ class CloseEventView(View): # checked 04/01/25
             item.open_event()
         # return redirect(self.request.META.get('HTTP_REFERER'))
         return redirect('event_list')
-    
-class CompanyCreateView(CreateView):
-    model = Organization
-    fields = ["name", "address", "email"]
-    template_name = 'dashboard.html'
-    context_object_name = 'events'
+
+class ParticipantListView(ListView):
+    model = Participant
+    template_name = 'pages/participants_list.html'
+    context_object_name = 'items_list'
+
+    """def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(deleted_at__isnull=True).order_by('-is_active', 'from_event_date')"""
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        items = Event.objects.filter(is_active=True, deleted_at__isnull=True)
+        context["items"] = items
+        context["title"] = "Events"
+
+        return context
