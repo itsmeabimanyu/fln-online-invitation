@@ -50,7 +50,6 @@ class EventCreateView(CreateView):
         items = self.model.objects.filter(deleted_at__isnull=True)
         context["items"] = items
         context["title_action"] = " Create"
-
         return context
     
 class EventListView(ListView):
@@ -65,10 +64,12 @@ class EventListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "Events"
-
+        context["form"] = EventForm()
         for item in context['items_list']:
             item.update_url = reverse('event_update', kwargs={'pk': item.id})
             item.delete_url = reverse('event_delete', kwargs={'pk': item.id})
+            item.close_url = reverse('event_close', kwargs={'pk': item.id})
+            item.form = EventForm(instance=item)
         return context
     
 class EventUpdateView(UpdateView):
@@ -95,10 +96,20 @@ class EventUpdateView(UpdateView):
                     os.remove(old_image_path)  # Hapus gambar lama
         return super().form_valid(form)
     
-class SoftDeleteEvent(View): # checked 04/01/25
+class SoftDeleteEventView(View): # checked 04/01/25
     def post(self, request, pk):
         item = get_object_or_404(Event, pk=pk)
         item.soft_delete() 
+        # return redirect(self.request.META.get('HTTP_REFERER'))
+        return redirect('event_list')
+
+class CloseEventView(View): # checked 04/01/25
+    def post(self, request, pk):
+        item = get_object_or_404(Event, pk=pk)
+        if item.is_active:
+            item.close_event()
+        else:
+            item.open_event()
         # return redirect(self.request.META.get('HTTP_REFERER'))
         return redirect('event_list')
     

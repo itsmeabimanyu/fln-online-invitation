@@ -10,5 +10,6 @@ urlpatterns = [
     path('events/create/', views.EventCreateView.as_view(), name='event_create'),
     path('events/list/', views.EventListView.as_view(), name='event_list'),
     path('events/update/<uuid:pk>/', views.EventUpdateView.as_view(), name='event_update'),
-     path('events/delete/<uuid:pk>/', views.SoftDeleteEvent.as_view(), name='event_delete'),
+     path('events/delete/<uuid:pk>/', views.SoftDeleteEventView.as_view(), name='event_delete'),
+     path('events/close/<uuid:pk>/', views.CloseEventView.as_view(), name='event_close'),
 ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

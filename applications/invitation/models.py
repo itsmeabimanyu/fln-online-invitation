@@ -29,25 +29,41 @@ class Event(models.Model):
         self.deleted_at = timezone.now()  # Set waktu penghapusan
         self.save()
 
+    def close_event(self):
+        self.is_active = False
+        self.save()
+
+    def open_event(self):
+        self.is_active = True
+        self.save()
+
     def save(self, *args, **kwargs):
         if self.image:
             # Buka gambar yang diupload
             img = Image.open(self.image)
+            
+            # Jika gambar memiliki alpha channel (RGBA), konversi ke RGB
+            if img.mode == 'RGBA':
+                img = img.convert('RGB')
+            
             # Cek ukuran gambar
             width, height = img.size
-            # Resize hanya jika lebih besar dari 800x600, atau jika ingin menambahkan padding
-            if width < 800 or height < 600:
-                # Menambahkan padding agar gambar menjadi 800x600
-                new_image = Image.new("RGB", (800, 600), (255, 255, 255))  # Padding putih
-                new_image.paste(img, ((800 - width) // 2, (600 - height) // 2))  # Menempatkan gambar di tengah
+            
+            # Resize atau padding untuk gambar lebih kecil dari 1280x720
+            if width < 1280 or height < 720:
+                # Menambahkan padding agar gambar menjadi 1280x720
+                new_image = Image.new("RGB", (1280, 720), (255, 255, 255))  # Padding putih
+                new_image.paste(img, ((1280 - width) // 2, (720 - height) // 2))  # Menempatkan gambar di tengah
                 img = new_image  # Ganti gambar dengan padding
             else:
-                # Resize menjadi 800x600 untuk gambar yang lebih besar
-                img = img.resize((800, 600), Image.Resampling.LANCZOS)
-            # Simpan gambar
+                # Resize menjadi 1280x720 untuk gambar yang lebih besar
+                img = img.resize((1280, 720), Image.Resampling.LANCZOS)
+            
+            # Simpan gambar dalam bentuk BytesIO untuk di-upload
             img_io = io.BytesIO()
             img.save(img_io, format='JPEG')
             img_io.seek(0)
+            
             # Buat InMemoryUploadedFile untuk gambar yang sudah diubah
             self.image = InMemoryUploadedFile(
                 img_io, 
@@ -57,6 +73,7 @@ class Event(models.Model):
                 size=img_io.tell(), 
                 charset=None
             )
+            
         super().save(*args, **kwargs)
 
 class Organization(models.Model):

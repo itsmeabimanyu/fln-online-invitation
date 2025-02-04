@@ -19,9 +19,9 @@
             </div>
             <div class="card-body">
                 {% if item.image %}
-                    <img id="preview" src="{{ item.image.url }}" class="card-img-top rounded  mb-5" alt="Image of {{ item.name }}">
+                <img id="preview" src="{{ item.image.url }}" class="card-img-top rounded  mb-5" alt="Image of {{ item.name }}">
                 {% else %}
-                    <img id="preview" src="{% static 'images/default.jpeg' %}" class="card-img-top rounded mb-5" alt="Default image">
+                <img id="preview" src="{% static 'images/default_1280_720.jpg' %}" class="card-img-top rounded mb-5" alt="Default image">
                 {% endif %}
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
@@ -54,51 +54,5 @@
             </div>                
         </div>
     </div>
-    <div class="col-sm-12 col-xl-8">
-        <div class="card">
-            <div class="card-header pb-0">
-                <div class="card-actions float-end">
-                    <div class="dropdown position-relative">
-                        <a href="#" data-bs-toggle="dropdown" data-bs-display="static">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-more-horizontal align-middle"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
-                        </a>
-
-                        <div class="dropdown-menu dropdown-menu-end">
-                            <a class="dropdown-item" href="#">Action</a>
-                            <a class="dropdown-item" href="#">Another action</a>
-                            <a class="dropdown-item" href="#">Something else here</a>
-                        </div>
-                    </div>
-                </div>
-                <h5 class="card-title mb-0">{{ title }}s</h5>
-            </div>
-            <div class="card-body">
-                <table id="example" class="table table-responsive table-hover table-striped">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Events</th>
-                            <th>Created at</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in items %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ item.event_name }}</td>
-                            <td>{{ item.created_at }}
-                            <td><span class="badge bg-success">Active</span></td>
-                            <td><button type="submit" class="btn btn-info">Close</button></td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-
 </div>
 {% endblock content %}
