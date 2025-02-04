@@ -4,42 +4,8 @@ import uuid
 from django.utils import timezone
 from PIL import Image
 from django.core.files.base import ContentFile
-from io import BytesIO
-
-def crop_to_16_9(image):
-    """
-    Crop gambar ke rasio 16:9.
-    :param image: File gambar yang diupload
-    :return: Gambar yang sudah di-crop (PIL Image object)
-    """
-    img = Image.open(image)
-    width, height = img.size
-    target_ratio = 16 / 9
-    current_ratio = width / height
-
-    if current_ratio > target_ratio:
-        # Crop sisi kiri dan kanan
-        new_width = int(height * target_ratio)
-        left = (width - new_width) / 2
-        top = 0
-        right = (width + new_width) / 2
-        bottom = height
-    else:
-        # Crop sisi atas dan bawah
-        new_height = int(width / target_ratio)
-        left = 0
-        top = (height - new_height) / 2
-        right = width
-        bottom = (height + new_height) / 2
-
-    # Crop gambar
-    cropped_img = img.crop((left, top, right, bottom))
-
-    # Konversi ke mode RGB jika gambar memiliki mode RGBA
-    if cropped_img.mode == 'RGBA':
-        cropped_img = cropped_img.convert('RGB')
-
-    return cropped_img
+import io
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 # Event Model - As before, representing an event to which people or companies are invited
 class Event(models.Model):
@@ -65,17 +31,31 @@ class Event(models.Model):
 
     def save(self, *args, **kwargs):
         if self.image:
-            # Crop gambar ke 16:9
-            cropped_image = crop_to_16_9(self.image)
-            # Simpan gambar yang sudah di-crop ke dalam BytesIO
-            output = BytesIO()
-            cropped_image.save(output, format='JPEG', quality=95)  # Simpan sebagai JPEG
-            output.seek(0)
-            # Simpan gambar ke field `image`
-            self.image.save(
-                self.image.name,
-                ContentFile(output.read()),
-                save=False
+            # Buka gambar yang diupload
+            img = Image.open(self.image)
+            # Cek ukuran gambar
+            width, height = img.size
+            # Resize hanya jika lebih besar dari 800x600, atau jika ingin menambahkan padding
+            if width < 800 or height < 600:
+                # Menambahkan padding agar gambar menjadi 800x600
+                new_image = Image.new("RGB", (800, 600), (255, 255, 255))  # Padding putih
+                new_image.paste(img, ((800 - width) // 2, (600 - height) // 2))  # Menempatkan gambar di tengah
+                img = new_image  # Ganti gambar dengan padding
+            else:
+                # Resize menjadi 800x600 untuk gambar yang lebih besar
+                img = img.resize((800, 600), Image.Resampling.LANCZOS)
+            # Simpan gambar
+            img_io = io.BytesIO()
+            img.save(img_io, format='JPEG')
+            img_io.seek(0)
+            # Buat InMemoryUploadedFile untuk gambar yang sudah diubah
+            self.image = InMemoryUploadedFile(
+                img_io, 
+                field_name='image', 
+                name=self.image.name, 
+                content_type='image/jpeg', 
+                size=img_io.tell(), 
+                charset=None
             )
         super().save(*args, **kwargs)
 
