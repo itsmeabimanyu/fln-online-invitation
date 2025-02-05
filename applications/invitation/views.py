@@ -1,7 +1,7 @@
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
-from django.views.generic import ListView, UpdateView, View, CreateView
+from django.views.generic import ListView, UpdateView, View, CreateView, DetailView, TemplateView
 from .models import Event, Participant
 from .forms import EventForm, ParticipantForm
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -197,3 +197,8 @@ class ParticipantDeleteView(View):
         item = get_object_or_404(Participant, pk=pk)
         item.delete() 
         return redirect(self.request.META.get('HTTP_REFERER'))
+
+class InvitationView(DetailView):
+    model = Event
+    template_name = 'pages/invitation_view.html'  # Nama template untuk tampilan detail
+    context_object_name = 'item'  # Nama variabel context yang akan dipakai di template

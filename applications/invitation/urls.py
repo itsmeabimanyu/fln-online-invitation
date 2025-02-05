@@ -13,4 +13,5 @@ urlpatterns = [
     path('participants/list/', views.ParticipantListView.as_view(), name='participant_list'),
     path('participants/create/<uuid:pk>/', views.ParticipantCreateView.as_view(), name='participant_create'),
     path('participant/delete/<uuid:pk>/', views.ParticipantDeleteView.as_view(), name='participant_delete'),
+    path('invitation/<uuid:pk>/', views.InvitationView.as_view(), name='invitation_detail'),
 ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

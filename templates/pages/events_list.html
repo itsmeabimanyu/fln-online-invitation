@@ -34,6 +34,7 @@
                             <!-- <a class="dropdown-item" href="{{ item.update_url }}">Edit</a> -->
 
                             <a href="{% url 'participant_create' item.id %}" class="dropdown-item">Add Participant</a>
+                            <a href="{% url 'invitation_detail' item.id %}" class="dropdown-item">View Invitation</a>
                             <a href="#" data-micromodal-trigger="modal-{{ item.id }}" class="dropdown-item">Edit</a>
                             <form method="post" action="{{ item.close_url }}" onsubmit="return confirm('Are you sure you want to {% if item.is_active %}close{% else %}open{% endif %} this event?');">
                                 {% csrf_token %}
