@@ -11,4 +11,6 @@ urlpatterns = [
     path('events/delete/<uuid:pk>/', views.SoftDeleteEventView.as_view(), name='event_delete'),
     path('events/close/<uuid:pk>/', views.CloseEventView.as_view(), name='event_close'),
     path('participants/list/', views.ParticipantListView.as_view(), name='participant_list'),
+    path('participants/create/<uuid:pk>/', views.ParticipantCreateView.as_view(), name='participant_create'),
+    path('participant/delete/<uuid:pk>/', views.ParticipantDeleteView.as_view(), name='participant_delete'),
 ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

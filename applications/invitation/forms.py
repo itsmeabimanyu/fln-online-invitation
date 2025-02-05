@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.core.validators import MinValueValidator
-from .models import Event
+from .models import Event, Participant
 
 class EventForm(forms.ModelForm):
     class Meta:
@@ -54,3 +54,8 @@ class EventForm(forms.ModelForm):
             if field_name in cleaned_data and cleaned_data[field_name]:
                 cleaned_data[field_name] = cleaned_data[field_name].upper()
         return cleaned_data"""
+            
+class ParticipantForm(forms.ModelForm):
+    class Meta:
+        model = Participant
+        fields = ["organization", "guest_name", "guest_email" ]

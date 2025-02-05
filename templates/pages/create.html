@@ -1,0 +1,141 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+{% load static %}
+<div class="row mb-2 mb-xl-3">
+    <div class="col-auto d-none d-sm-block">
+        <h3><strong>{{ title|title }}</strong> {{ title_action|title }}</h3>
+    </div>
+    <div class="col-auto ms-auto text-end mt-n1">
+        <!-- <a href="#" data-micromodal-trigger="modal-1" class="btn btn-success">New Event</a>
+        <a href="{% url 'event_create' %}" class="btn btn-success">New Event</a> -->
+        <button class="btn btn-primary" type="button" onclick="window.history.back();">Back</button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card mb-4 border">
+            <div class="card-header px-4 pt-4">
+                <div class="card-actions float-end">
+                </div>
+                <h3 class="fw-bolder">{{ event }}</h3>
+                <div class="badge {% if active_status %}bg-success{% else %}bg-danger{% endif %} my-2">
+                    {% if active_status %}Active{% else %}Inactive{% endif %}
+                </div>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="tbl_participant" class="display row-border" style="width:100%">
+                            <thead>
+                                <tr><th>No</th> <!-- Kolom untuk nomor urut -->
+                                    <th>Guest Name</th>
+                                    <th>Guest Email (Optional)</th>
+                                    <th>Organization (Optional)</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ item.guest_name }}</td>
+                                    <td>{{ item.guest_email }}</td>
+                                    <td>{{ item.organization }}</td>
+                                    <td>
+                                        <!-- Optional: you can add actions like Edit or Delete -->
+                                        <a href="#" class="btn btn-warning btn-sm">Update</a>
+                                        <a href="#" data-micromodal-trigger="modal-{{ item.id }}" class="btn btn-danger btn-sm">Delete</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                <tr>
+                                    <td>{{items|length|add:1}}</td>
+                                    <td><input type="text" class="form-control" name="guest_name"></td>
+                                    <td><input type="email" class="form-control" name="guest_email"></td>
+                                    <td><input type="text" class="form-control" name="organization"></td>
+                                    <td><button class="btn btn-danger btn-sm deleteRow">Delete</button></td> 
+                                </tr>
+                                <!-- More rows can be added here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="button" id="addRow" class="btn btn-info">Add New Row</button>
+                    <button type="submit" class="btn btn-success">Submit</button>
+                </div>
+                <script>
+                    $(document).ready(function() {
+                        var table = $('#tbl_participant').DataTable();
+                        $('#addRow').on('click', function() {
+                            var rowCount = table.rows().count();  // Mengambil jumlah baris saat ini
+            
+                            table.row.add([
+                                rowCount + 1,  // Menambahkan nomor urut (baris baru + 1)
+                                '<input type="text" class="form-control" name="guest_name">',
+                                '<input type="email" class="form-control" name="guest_email">',
+                                '<input type="text" class="form-control" name="organization">',
+                                '<button class="btn btn-danger btn-sm deleteRow">Delete</button>'
+                            ]).draw(false);  // draw(false) mencegah tabel menggulir ke atas
+                        });
+
+                        // Menghapus baris jika lebih dari satu baris
+                        $(document).on('click', '.deleteRow', function() {
+                            var row = $(this).closest('tr');  // Menemukan baris yang berisi tombol yang diklik
+                            
+                            // Mengecek jumlah baris yang tersisa di tabel
+                            if (table.rows().count() > 1) {
+                                table.row(row).remove().draw();  // Menghapus baris dari DataTable
+                                updateRowNumbers();  // Memperbarui nomor urut setelah baris dihapus
+                            } else {
+                                alert("You cannot delete the last row!");
+                            }
+                        });
+
+                        // Fungsi untuk memperbarui nomor urut setelah penghapusan atau penambahan baris
+                        function updateRowNumbers() {
+                            table.rows().every(function(index) {
+                                var row = this.node();
+                                $(row).find('td:first').text(index + 1);  // Update nomor urut di kolom pertama
+                            });
+                        }
+                    });
+                </script>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% for item in items %}
+<!-- Modal untuk menghapus item -->
+<div class="modal micromodal-slide" id="modal-{{ item.id }}" aria-hidden="true">
+    <div class="modal__overlay" tabindex="-1" data-micromodal-close>
+        <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-{{ item.id }}-title">
+            <!-- Header Modal -->
+            <header class="modal__header">
+                <h2 class="modal__title" id="modal-{{ item.id }}-title">
+                    <strong>{{ title|title }}</strong> Delete
+                </h2>
+                <button class="modal__close" aria-label="Tutup modal" data-micromodal-close></button>
+            </header>
+
+            <!-- Konten Modal -->
+            <main class="modal__content" id="modal-{{ item.id }}-content">
+                <p>Are you sure you want to delete {{ title }} <strong>{{ item.guest_name }}</strong>?</p>
+                <!-- Form untuk menghapus item -->
+                <form method="post" action="{% url 'participant_delete' pk=item.pk %}">
+                    {% csrf_token %}
+                    <div class="modal__footer">
+                        <button type="button" class="btn btn-secondary" data-micromodal-close>Cancel</button>
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </div>
+                </form>
+            </main>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock content %}
