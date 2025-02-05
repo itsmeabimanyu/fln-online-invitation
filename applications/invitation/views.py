@@ -200,5 +200,11 @@ class ParticipantDeleteView(View):
 
 class InvitationView(DetailView):
     model = Event
-    template_name = 'pages/invitation_view.html'  # Nama template untuk tampilan detail
+    template_name = 'pages/invitation/invitation_view.html'  # Nama template untuk tampilan detail
     context_object_name = 'item'  # Nama variabel context yang akan dipakai di template
+
+class ParticipantRegisterCreateView(CreateView):
+    model = Participant
+    form_class = ParticipantForm
+    template_name = 'pages/invitation/invitation_create.html'
+    context_object_name = 'item'
