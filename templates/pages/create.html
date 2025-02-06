@@ -52,7 +52,7 @@
                                 {% endfor %}
                                 <tr>
                                     <td>{{items|length|add:1}}</td>
-                                    <td><input type="text" class="form-control" name="guest_name"></td>
+                                    <td><input type="text" class="form-control" name="guest_name" required></td>
                                     <td><input type="email" class="form-control" name="guest_email"></td>
                                     <td><input type="text" class="form-control" name="organization"></td>
                                     <td><button class="btn btn-danger btn-sm deleteRow">Delete</button></td> 
@@ -74,7 +74,7 @@
             
                             table.row.add([
                                 rowCount + 1,  // Menambahkan nomor urut (baris baru + 1)
-                                '<input type="text" class="form-control" name="guest_name">',
+                                '<input type="text" class="form-control" name="guest_name" required>',
                                 '<input type="email" class="form-control" name="guest_email">',
                                 '<input type="text" class="form-control" name="organization">',
                                 '<button class="btn btn-danger btn-sm deleteRow">Delete</button>'

@@ -1,101 +1,124 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Invitation</title>
+{% include 'includes/head.html' %}
+{% block extrastyle %}{% endblock extrastyle %}
+{% block extrahead %}
     <!-- Link to Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
     <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+     <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">  -->
     <style>
         body {
             background-color: #f8f9fa;
-            font-family: 'Dancing Script', cursive; /* Applying the font globally */
+            /* font-family: 'Dancing Script', cursive; Applying the font globally */
         }
-        .card {
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            margin-top: 30px;
-        }
-        .card-header img {
-            width: 100%;
-            height: auto;
-            object-fit: cover;
-            border-radius: 10px 10px 0 0;
-        }
-        .card-body {
-            text-align: center;
-            padding: 30px;
-            background-color: #ffffff;
-        }
-        .btn-info {
-            background-color: #17a2b8;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            text-decoration: none;
-            font-size: 1.1rem;
-        }
-        .btn-info:hover {
-            background-color: #138496;
-        }
-        .card-footer {
-            text-align: center;
-            background-color: #343a40;
-            color: white;
-            padding: 15px;
-        }
-        /* Apply italic style to title and text 
-        .card-title {
-            font-style: italic; /* Making the title italic */
-        }
-        .card-text {
-            font-style: italic; /* Adding an italic style for paragraph text */
-        } */
     </style>
+{% endblock extrahead %}
 </head>
 <body>
-
-    <div class="container">
+    <div class="container" style="overflow-x: hidden;">
         <div class="row justify-content-center">
-            <div class="col-lg-8 col-md-10 col-sm-12">
-                <div class="card">
+            <div class="col-lg-6 col-md-10 col-sm-12">
+                <div class="card mt-2 mb-2">
                     <!-- Header with Image -->
                     <div class="card-header p-0">
-                        <img src="https://images.highfile.com/wp-content/uploads/2023/11/Event-Invitation-Template-Word-Illustrator.png?strip=all&lossy=1&quality=90&webp=90&sharp=1&ssl=1&fit=770,985" alt="Event Image">
+                        <img src="{% static 'images/default_invitation.jpeg' %}" class="img-fluid w-100" alt="Event Image">
                     </div>
 
                     <!-- Invitation Content -->
-                    <div class="card-body">
-                        <h1 class="card-title mb-4">You Are Invited!</h1>
-                        <p class="card-text">It is our pleasure to invite you to join us for a special occasion.</p>
-                        <div class="row justify-content-center">
-                            <div class="col-md-8">
-                                <p><strong>Event:</strong> {{ item.event_name }}</p>
-                                <p><strong>Date:</strong> {{ item.from_event_date|date:"l, j F Y" }} - {{ item.to_event_date|date:"l, j F Y" }}</p>
-                                <p><strong>Time:</strong> {{ item.from_event_date|date:"g.i A" }} - {{ item.to_event_date|date:"g.i A" }}</p>
-                                <p><strong>Location:</strong> {{ item.location }}</p>
+                    <div class="card-body d-flex justify-content-center align-items-center p-4">
+                        <div class="row justify-content-center w-100 p-3">
+                            <div class="col-xl-8">
+                                <h1 class="card-text mb-4 text-center">You Are Invited!</h1>
+                                <p class="card-text text-center">It is our pleasure to invite you to join us for a special occasion.</p>
+                                <div class="row mb-2 justify-content-center">
+                                    <div class="col-1">
+                                        <div class="row">
+                                            <p class="card-text"><i class="align-middle me-2" data-feather="award"></i></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-10 col-md-10">
+                                        <div class="row">
+                                            <div class="text-md text-muted">Event</div>
+                                        </div>
+                                        <div class="row">
+                                            <p class="text-md"><strong>{{ item.event_name }}</strong></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row justify-content-center">
+                                    <div class="col-1">
+                                        <div class="row">
+                                            <p class="card-text"><i class="align-middle me-2" data-feather="calendar"></i></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-5 col-md-5">
+                                        <div class="row">
+                                            <div class="text-md text-muted">From</div>
+                                        </div>
+                                        <div class="row">
+                                            <p class="text-md"><strong>{{ item.from_event_date|date:"j M Y" }}</strong></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-5 col-md-5">
+                                        <div class="row">
+                                            <div class="text-md text-muted">To</div>
+                                        </div>
+                                        <div class="row">
+                                            <p class="text-md"><strong>{{ item.from_event_date|date:"j M Y" }}</strong></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-2 justify-content-center">
+                                    <div class="col-1">
+                                        <div class="row">
+                                            <p class="card-text"><i class="align-middle me-2" data-feather="clock"></i></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-10 col-md-10">
+                                        <div class="row">
+                                            <div class="text-md text-muted">Time</div>
+                                        </div>
+                                        <div class="row">
+                                            <p class="text-md"><strong>{{ item.from_event_date|date:"g:i A" }} - {{ item.to_event_date|date:"g:i A" }}</strong></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-2 justify-content-center">
+                                    <div class="col-1">
+                                        <div class="row">
+                                            <p class="card-text"><i class="align-middle me-2" data-feather="map-pin"></i></p>
+                                        </div>
+                                    </div>
+                                    <div class="col-10 col-md-10">
+                                        <div class="row">
+                                            <div class="text-md text-muted">Location</div>
+                                        </div>
+                                        <div class="row">
+                                            <p class="text-md"><strong>{{ item.location|title }}</strong></p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-
-                        <!-- RSVP Button -->
-                        <div class="mt-4">
-                            <a href="{% url 'participant_register' item.id %}" class="btn btn-info">Register</a>
+                            <button type="button" id="add-row" class="btn btn-info mt-3 w-75" onclick="window.location.href='{% url 'participant_register' item.id %}'">
+                                Register Now!
+                            </button>
                         </div>
                     </div>
 
                     <!-- Footer -->
-                    <div class="card-footer text-secondary">
-                        <small>&copy; 2024 - IT Frina Lestari Nusantara, Inc. All rights reserved.</small>
+                    <div class="card-footer d-flex justify-content-center align-items-center text-secondary" style='background-color: #343a40;'>
+                        <div class="row w-100 align-items-center">
+                            <p class="card-text text-center">&copy; 2024 - IT Frina Lestari Nusantara, Inc. All rights reserved.</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Bootstrap 5 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+{% include 'includes/scripts.html' %}
 </body>
 </html>

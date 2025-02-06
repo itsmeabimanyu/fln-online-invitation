@@ -96,7 +96,7 @@ class Participant(models.Model):
     invitation = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="guests", verbose_name="Undangan")
     # organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="Instansi")
     organization = models.CharField(max_length=255, blank=True, null=True, verbose_name="Organization")
-    guest_name = models.CharField(max_length=255, verbose_name="Name")
+    guest_name = models.CharField(max_length=255, verbose_name="Name*")
     guest_email = models.EmailField(validators=[EmailValidator()], blank=True, null=True, verbose_name="Email")
     is_attending = models.BooleanField(default=False, verbose_name="Hadir?")
     # additional_guests = models.PositiveIntegerField(default=0, verbose_name="Tamu Tambahan")

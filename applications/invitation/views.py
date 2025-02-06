@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, UpdateView, View, CreateView, DetailView, TemplateView
 from .models import Event, Participant
-from .forms import EventForm, ParticipantForm
+from .forms import EventForm, ParticipantForm, ParticipantRegisterForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 import os
 from PIL import Image
@@ -173,7 +173,8 @@ class ParticipantCreateView(CreateView):
         guest_emails = self.request.POST.getlist('guest_email')  # Menangani multiple guest_email
 
         # Pastikan jumlah guest_name dan guest_email cocok
-        if len(guest_names) == len(guest_emails):
+        '''
+        if len(guest_names):
             for name, email, organization in zip(guest_names, guest_emails, organizations):
                 # Membuat Participant baru untuk setiap pasangan name dan email
                 Participant.objects.create(
@@ -189,6 +190,18 @@ class ParticipantCreateView(CreateView):
 
             # Mengembalikan response jika ada error
             return self.form_invalid(form)
+        '''
+
+        for name, email, organization in zip(guest_names, guest_emails, organizations):
+
+            # Membuat Participant baru untuk setiap pasangan name dan email
+            Participant.objects.create(
+                # organization=form.cleaned_data['organization'],
+                invitation=self.event,
+                organization=organization,
+                guest_name=name,
+                guest_email=email
+            )
 
         return redirect(self.request.META.get('HTTP_REFERER'))
 
@@ -205,6 +218,30 @@ class InvitationView(DetailView):
 
 class ParticipantRegisterCreateView(CreateView):
     model = Participant
-    form_class = ParticipantForm
+    form_class = ParticipantRegisterForm
+    # fields = ["organization", "guest_name"]
     template_name = 'pages/invitation/invitation_create.html'
     context_object_name = 'item'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.event = get_object_or_404(Event, pk=self.kwargs.get('pk'))
+        return super().dispatch(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        # Mendapatkan input data untuk guest_name dan guest_email yang bisa berupa list
+        # organizations = self.request.POST.getlist('organization')  # Menangani multiple guest_name
+        organization = self.request.POST.get('organization')
+        guest_names = self.request.POST.getlist('guest_name')  # Menangani multiple guest_name
+        guest_emails = self.request.POST.getlist('guest_email')  # Menangani multiple guest_email
+
+        for name, email in zip(guest_names, guest_emails):
+
+            # Membuat Participant baru untuk setiap pasangan name dan email
+            Participant.objects.create(
+                # organization=form.cleaned_data['organization'],
+                invitation=self.event,
+                organization=organization,
+                guest_name=name,
+                guest_email=email
+            )
+        return redirect(self.request.META.get('HTTP_REFERER'))

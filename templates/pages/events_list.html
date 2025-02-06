@@ -14,7 +14,7 @@
 <div class="row">
     {% for item in items_list %}
     <div class="col-12 col-xs-12 col-sm-12 col-md-6 col-lg-4 col-xl-3 d-flex">
-        <div class="card mb-4 border {% if not item.is_active  %}bg-secondary bg-opacity-50{% endif %}">
+        <div class="card mb-4 border {% if not item.is_active %}bg-secondary bg-opacity-50{% endif %}">
             <div class="card-img-container">
                 {% if item.image %}
                 <img src="{{ item.image.url }}" class="card-img-top {% if not item.is_active %}opacity-25{% endif %}" alt="{{ item.name }}">
@@ -32,7 +32,6 @@
                         </a>
                         <div class="dropdown-menu dropdown-menu-end" data-bs-popper="static">
                             <!-- <a class="dropdown-item" href="{{ item.update_url }}">Edit</a> -->
-
                             <a href="{% url 'participant_create' item.id %}" class="dropdown-item">Add Participant</a>
                             <a href="{% url 'invitation_detail' item.id %}" class="dropdown-item">View Invitation</a>
                             <a href="#" data-micromodal-trigger="modal-{{ item.id }}" class="dropdown-item">Edit</a>
