@@ -46,7 +46,7 @@
                                     <td>
                                         <!-- Optional: you can add actions like Edit or Delete -->
                                         <a href="#" class="btn btn-warning btn-sm">Update</a>
-                                        <a href="#" data-micromodal-trigger="modal-{{ item.id }}" class="btn btn-danger btn-sm">Delete</a>
+                                        <button type="button" data-micromodal-trigger="modal-{{ item.id }}" class="btn btn-danger btn-sm">Delete</button>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -69,40 +69,60 @@
                 <script>
                     $(document).ready(function() {
                         var table = $('#tbl_participant').DataTable();
+                
+                        // Add new row when the "Add Row" button is clicked
                         $('#addRow').on('click', function() {
-                            var rowCount = table.rows().count();  // Mengambil jumlah baris saat ini
-            
+                            var rowCount = table.rows().count();  // Get current row count
+                            
+                            // Add a new row with input fields and a delete button
                             table.row.add([
-                                rowCount + 1,  // Menambahkan nomor urut (baris baru + 1)
+                                rowCount + 1,  // Add row number (new row + 1)
                                 '<input type="text" class="form-control" name="guest_name" required>',
                                 '<input type="email" class="form-control" name="guest_email">',
                                 '<input type="text" class="form-control" name="organization">',
                                 '<button class="btn btn-danger btn-sm deleteRow">Delete</button>'
-                            ]).draw(false);  // draw(false) mencegah tabel menggulir ke atas
+                            ]).draw(false);  // draw(false) prevents table from scrolling to top
                         });
-
-                        // Menghapus baris jika lebih dari satu baris
+                
+                        // Delete row functionality
                         $(document).on('click', '.deleteRow', function() {
-                            var row = $(this).closest('tr');  // Menemukan baris yang berisi tombol yang diklik
+                            var row = $(this).closest('tr');  // Find the row that contains the clicked button
                             
-                            // Mengecek jumlah baris yang tersisa di tabel
+                            // Ensure there's more than one row before allowing deletion
                             if (table.rows().count() > 1) {
-                                table.row(row).remove().draw();  // Menghapus baris dari DataTable
-                                updateRowNumbers();  // Memperbarui nomor urut setelah baris dihapus
+                                table.row(row).remove().draw();  // Remove the row
+                                updateRowNumbers();  // Update row numbers after deletion
                             } else {
                                 alert("You cannot delete the last row!");
                             }
+                            
+                            // Update delete button visibility after deletion
+                            toggleDeleteButtonsVisibility();
                         });
-
-                        // Fungsi untuk memperbarui nomor urut setelah penghapusan atau penambahan baris
+                
+                        // Function to toggle delete button visibility based on row count
+                        function toggleDeleteButtonsVisibility() {
+                            var deleteButtons = $('.deleteRow');
+                            if (table.rows().count() <= 1) {
+                                deleteButtons.hide();  // Hide delete buttons if there's 1 or fewer rows
+                            } else {
+                                deleteButtons.show();  // Show delete buttons if more than 1 row
+                            }
+                        }
+                
+                        // Update row numbers after a row is added or removed
                         function updateRowNumbers() {
                             table.rows().every(function(index) {
                                 var row = this.node();
-                                $(row).find('td:first').text(index + 1);  // Update nomor urut di kolom pertama
+                                $(row).find('td:first').text(index + 1);  // Update row number in the first column
                             });
                         }
+                
+                        // Initial check on page load to adjust delete button visibility
+                        toggleDeleteButtonsVisibility();
                     });
                 </script>
+                
             </form>
         </div>
     </div>

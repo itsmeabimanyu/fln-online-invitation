@@ -9,6 +9,7 @@ import os
 from PIL import Image
 from io import BytesIO
 from django.core.files.base import ContentFile
+from django.contrib import messages
 
 # Create your views here.
 '''def crop_image(image, target_width, target_height):
@@ -193,7 +194,6 @@ class ParticipantCreateView(CreateView):
         '''
 
         for name, email, organization in zip(guest_names, guest_emails, organizations):
-
             # Membuat Participant baru untuk setiap pasangan name dan email
             Participant.objects.create(
                 # organization=form.cleaned_data['organization'],
@@ -229,19 +229,25 @@ class ParticipantRegisterCreateView(CreateView):
     
     def form_valid(self, form):
         # Mendapatkan input data untuk guest_name dan guest_email yang bisa berupa list
-        # organizations = self.request.POST.getlist('organization')  # Menangani multiple guest_name
-        organization = self.request.POST.get('organization')
+        organization = self.request.POST.get('organization')  # Jika organization adalah single value
         guest_names = self.request.POST.getlist('guest_name')  # Menangani multiple guest_name
         guest_emails = self.request.POST.getlist('guest_email')  # Menangani multiple guest_email
 
-        for name, email in zip(guest_names, guest_emails):
+        # Validasi: Pastikan jumlah guest_names dan guest_emails sama
+        """
+        if len(guest_names) != len(guest_emails):
+            raise ValueError("Jumlah guest_name dan guest_email tidak sama.")
+        """
 
-            # Membuat Participant baru untuk setiap pasangan name dan email
+        # Iterasi untuk membuat Participant baru
+        for name, email in zip(guest_names, guest_emails):
             Participant.objects.create(
-                # organization=form.cleaned_data['organization'],
-                invitation=self.event,
+                invitation=self.event,  # Pastikan self.event sudah terdefinisi
                 organization=organization,
                 guest_name=name,
                 guest_email=email
             )
-        return redirect(self.request.META.get('HTTP_REFERER'))
+
+        messages.success(self.request, 'Thank you for your response! You will now wait for a response from us.')
+        return redirect(reverse_lazy('invitation_detail', kwargs={'pk': self.event.id}))
+    

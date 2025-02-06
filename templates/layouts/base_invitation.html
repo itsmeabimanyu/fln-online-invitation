@@ -1,0 +1,133 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+{% include 'includes/head.html' %}
+{% block extrastyle %}
+<style>
+    hr.hr-text {
+        position: relative;
+          border: none;
+          height: 1px;
+          background: #999;
+      }
+      
+      hr.hr-text::before {
+          content: attr(data-content);
+          display: inline-block;
+          background: #fff;
+          font-weight: bold;
+          font-size: 0.85rem;
+          color: #999;
+          border-radius: 30rem;
+          padding: 0.2rem 2rem;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+      }
+</style>
+{% endblock extrastyle %}
+{% block extrahead %}
+    <!-- Link to Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+     <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">  -->
+    <style>
+        body {
+            background-color: #222e3c;;
+            /* font-family: 'Dancing Script', cursive; Applying the font globally */
+        }
+    </style>
+{% endblock extrahead %}
+</head>
+<body>
+    <div class="container" style="overflow-x: hidden;">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-10 col-sm-12">
+                <div class="card mt-2 mb-2">
+                    <!-- Header with Image -->
+                    <div class="card-header p-0">
+                        <img src="{% static 'images/default_invitation.jpeg' %}" class="img-fluid w-100" alt="Event Image">
+                    </div>
+            
+                    <!-- Invitation Content -->
+                    <div class="card-body d-flex justify-content-center align-items-center p-4">
+                        <div class="row justify-content-center w-100">
+                            <div class="col-xl-8">
+                                <h1 class="card-text mb-4 text-center">You Are Invited!</h1>
+                                <p class="card-text text-center">It is our pleasure to invite you to join us for a special occasion.</p>
+                                {% block content %}{% endblock content %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="card-footer d-flex justify-content-center align-items-center text-secondary" style='background-color: #222e3c;;'>
+                        <div class="row w-100 align-items-center">
+                            <p class="card-text text-center">&copy; 2025 - IT Frina Lestari Nusantara, Inc. All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+{% include 'includes/scripts.html' %}
+{% block extra_js %}
+    <script>
+        $(document).ready(function() {
+            // Menambahkan baris baru
+            $('#add-row').on('click', function () {
+                var guestNamesContainer = $('#guest-names-container');
+
+                // Membuat baris input baru
+                var newInputRow = $('<div class="guest-name-row">')
+                    .append('<hr data-content="AND" class="hr-text"><div class="mb-3">')
+                    .append('<label for="guest_name" class="form-label">Name<span class="text-danger"> *</span></label>')
+                    .append('<input id="guest_name" type="text" class="form-control mt-1" name="guest_name" placeholder="Enter your name" required></div>')
+                    .append('<div class="mb-3">')
+                    .append('<label for="guest_email">Email</label>')
+                    .append('<input id="guest_email" type="email" class="form-control mt-1" name="guest_email" placeholder="Enter your email"></div>')
+                    .append('<button type="button" class="btn btn-sm btn-danger remove-row mt-3">Remove</button>');
+
+                // Menambahkan baris baru ke dalam kontainer
+                guestNamesContainer.append(newInputRow);
+
+                // Perbarui visibilitas tombol Remove
+                toggleRemoveButton();
+            });
+
+            // Menghapus baris
+            $(document).on('click', '.remove-row', function () {
+                var row = $(this).closest('.guest-name-row');  // Menemukan baris input yang berisi tombol yang diklik
+                
+                row.remove();  // Menghapus baris
+
+                // Perbarui visibilitas tombol Remove setelah baris dihapus
+                toggleRemoveButton();
+            });
+
+            // Fungsi untuk memeriksa dan menyembunyikan tombol Remove jika hanya ada 1 baris
+            function toggleRemoveButton() {
+                var rows = $('#guest-names-container .guest-name-row');
+                rows.each(function () {
+                    if (rows.length === 1) {
+                        // Sembunyikan tombol Remove di baris terakhir jika hanya ada satu baris
+                        $(this).find('.remove-row').hide();
+                    } else {
+                        // Tampilkan tombol Remove jika ada lebih dari satu baris
+                        $(this).find('.remove-row').show();
+                    }
+                });
+            }
+
+            // Panggil toggleRemoveButton saat halaman dimuat untuk memastikan tampilan yang benar
+            toggleRemoveButton();
+            });
+    </script>
+{% endblock extra_js %}
+</html>
