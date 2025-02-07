@@ -7,6 +7,10 @@
 {% include 'includes/head.html' %}
 {% block extrastyle %}
 <style>
+    hr.dashed {
+        border-top: 2px dashed #999;
+    }
+    
     hr.hr-text {
         position: relative;
           border: none;
@@ -57,8 +61,8 @@
                     <div class="card-body d-flex justify-content-center align-items-center p-4">
                         <div class="row justify-content-center w-100">
                             <div class="col-xl-8">
-                                <h1 class="card-text mb-4 text-center">You Are Invited!</h1>
-                                <p class="card-text text-center">It is our pleasure to invite you to join us for a special occasion.</p>
+                                <h1 class="card-text mb-4 text-center">{{ title }}</h1>
+                                <p class="card-text text-center">{{ description_title }}</p>
                                 {% block content %}{% endblock content %}
                             </div>
                         </div>
@@ -86,12 +90,12 @@
 
                 // Membuat baris input baru
                 var newInputRow = $('<div class="guest-name-row">')
-                    .append('<hr data-content="AND" class="hr-text"><div class="mb-3">')
+                    .append('<hr data-content="000" class="hr-text"><div class="mb-3">')
                     .append('<label for="guest_name" class="form-label">Name<span class="text-danger"> *</span></label>')
                     .append('<input id="guest_name" type="text" class="form-control mt-1" name="guest_name" placeholder="Enter your name" required></div>')
-                    .append('<div class="mb-3">')
-                    .append('<label for="guest_email">Email</label>')
-                    .append('<input id="guest_email" type="email" class="form-control mt-1" name="guest_email" placeholder="Enter your email"></div>')
+                    // .append('<div class="mb-3">')
+                    // .append('<label for="guest_email">Email</label>')
+                    // .append('<input id="guest_email" type="email" class="form-control mt-1" name="guest_email" placeholder="Enter your email"></div>')
                     .append('<button type="button" class="btn btn-sm btn-danger remove-row mt-3">Remove</button>');
 
                 // Menambahkan baris baru ke dalam kontainer
@@ -127,7 +131,26 @@
 
             // Panggil toggleRemoveButton saat halaman dimuat untuk memastikan tampilan yang benar
             toggleRemoveButton();
-            });
+        });
     </script>
+    <script>
+        // jQuery untuk menangani klik tombol dan mengganti dengan <hr>
+        $('#toggleButton').on('click', function() {
+          // Ganti tombol dengan elemen <hr>
+          $(this).replaceWith('<hr id="toggleButton" class="my-4 dashed" >');
+          
+          // Toggle (menampilkan/menyembunyikan) konten yang bisa dilipat
+          $('#collapseExample').collapse('toggle');
+        });
+    
+        // Optional: Menangani kejadian saat collapse ditampilkan atau disembunyikan
+        $('#collapseExample').on('show.bs.collapse', function () {
+          // Anda bisa menambahkan fungsi lain di sini jika diperlukan saat collapse ditampilkan
+        });
+    
+        $('#collapseExample').on('hidden.bs.collapse', function () {
+          // Anda bisa menambahkan fungsi lain di sini jika diperlukan saat collapse disembunyikan
+        });
+      </script>
 {% endblock extra_js %}
 </html>

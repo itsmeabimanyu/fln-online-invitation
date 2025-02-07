@@ -163,15 +163,20 @@ class ParticipantCreateView(CreateView):
         context["title_action"] = " Create"
         context["active_status"] = self.event.is_active
         context["event"] = self.event
-        context["items"] = self.model.objects.filter(invitation=self.event)
-        context["event"] = self.event
+        object_item = self.model.objects.filter(invitation=self.event)
+        for item in object_item:
+            item.delete_url = reverse('participant_delete', kwargs={'pk': item.pk})
+            item.approve_url = reverse('participant_approve', kwargs={'pk': item.pk})
+            item.action = "reject" if item.is_approved else "approve"
+            item.action_color = "info" if item.is_approved else "secondary"
+        context["items"] = object_item
         return context
     
     def form_valid(self, form):
         # Mendapatkan input data untuk guest_name dan guest_email yang bisa berupa list
         organizations = self.request.POST.getlist('organization')  # Menangani multiple guest_name
         guest_names = self.request.POST.getlist('guest_name')  # Menangani multiple guest_name
-        guest_emails = self.request.POST.getlist('guest_email')  # Menangani multiple guest_email
+        emails = self.request.POST.getlist('email')  # Menangani multiple guest_email
 
         # Pastikan jumlah guest_name dan guest_email cocok
         '''
@@ -192,15 +197,14 @@ class ParticipantCreateView(CreateView):
             # Mengembalikan response jika ada error
             return self.form_invalid(form)
         '''
-
-        for name, email, organization in zip(guest_names, guest_emails, organizations):
+        for name, email, organization in zip(guest_names, emails, organizations):
             # Membuat Participant baru untuk setiap pasangan name dan email
             Participant.objects.create(
                 # organization=form.cleaned_data['organization'],
                 invitation=self.event,
                 organization=organization,
                 guest_name=name,
-                guest_email=email
+                email=email
             )
 
         return redirect(self.request.META.get('HTTP_REFERER'))
@@ -210,17 +214,25 @@ class ParticipantDeleteView(View):
         item = get_object_or_404(Participant, pk=pk)
         item.delete() 
         return redirect(self.request.META.get('HTTP_REFERER'))
+    
+class ParticipantApproveView(View):
+    def post(self, request, pk):
+        item = get_object_or_404(Participant, pk=pk)
 
-class InvitationView(DetailView):
-    model = Event
-    template_name = 'pages/invitation/invitation_view.html'  # Nama template untuk tampilan detail
-    context_object_name = 'item'  # Nama variabel context yang akan dipakai di template
+        if item.is_approved:
+            item.is_approved = False
+            item.save()
+        else:
+            item.approve_participant()      
 
-class ParticipantRegisterCreateView(CreateView):
+        return redirect(self.request.META.get('HTTP_REFERER'))
+
+# INVITATION
+class InvitationView(CreateView):
     model = Participant
     form_class = ParticipantRegisterForm
     # fields = ["organization", "guest_name"]
-    template_name = 'pages/invitation/invitation_create.html'
+    template_name = 'pages/invitation/invitation_view.html'
     context_object_name = 'item'
 
     def dispatch(self, request, *args, **kwargs):
@@ -230,8 +242,9 @@ class ParticipantRegisterCreateView(CreateView):
     def form_valid(self, form):
         # Mendapatkan input data untuk guest_name dan guest_email yang bisa berupa list
         organization = self.request.POST.get('organization')  # Jika organization adalah single value
+        email = self.request.POST.get('email') 
         guest_names = self.request.POST.getlist('guest_name')  # Menangani multiple guest_name
-        guest_emails = self.request.POST.getlist('guest_email')  # Menangani multiple guest_email
+        # guest_emails = self.request.POST.getlist('guest_email')  # Menangani multiple guest_email
 
         # Validasi: Pastikan jumlah guest_names dan guest_emails sama
         """
@@ -240,14 +253,26 @@ class ParticipantRegisterCreateView(CreateView):
         """
 
         # Iterasi untuk membuat Participant baru
-        for name, email in zip(guest_names, guest_emails):
+        # for name, email in zip(guest_names, guest_emails):
+        for name in guest_names:  # Tidak perlu menggunakan zip jika hanya satu iterable
             Participant.objects.create(
                 invitation=self.event,  # Pastikan self.event sudah terdefinisi
+                email=email,
                 organization=organization,
                 guest_name=name,
-                guest_email=email
+                # guest_email=email
             )
 
-        messages.success(self.request, 'Thank you for your response! You will now wait for a response from us.')
-        return redirect(reverse_lazy('invitation_detail', kwargs={'pk': self.event.id}))
+        # messages.success(self.request, 'Thank you for your response! You will now wait for a response from us.')
+        return redirect(reverse_lazy('success_register', kwargs={'pk': self.event.id}))
     
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "You Are Invited!"
+        context["description_title"] = "It is our pleasure to invite you to join us for a special occasion."
+        context["description_title_form"] = "Please kindly fill out the form below."
+        context["item"] = get_object_or_404(Event, id=self.event.id)
+        return context
+    
+class ParticipantSuccessRegisterView(TemplateView):
+    template_name = 'pages/invitation/success_register.html'

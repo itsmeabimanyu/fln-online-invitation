@@ -58,18 +58,18 @@ class EventForm(forms.ModelForm):
 class ParticipantForm(forms.ModelForm):
     class Meta:
         model = Participant
-        fields = ["organization", "guest_name", "guest_email" ]
+        fields = ["organization", "guest_name", "email" ]
 
 class ParticipantRegisterForm(forms.ModelForm):
     class Meta:
         model = Participant
-        fields = ["organization", "guest_name", "guest_email" ]
+        fields = ["organization", "guest_name", "email" ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['organization'].widget.attrs.update({'placeholder': 'Enter your organization name'})
         self.fields['guest_name'].widget.attrs.update({'placeholder': 'Enter your name'})
-        self.fields['guest_email'].widget.attrs.update({'placeholder': 'Enter your email'})
+        self.fields['email'].widget.attrs.update({'placeholder': 'Enter your email'})
 
         for field_name, field in self.fields.items():
             if self.errors.get(field_name):

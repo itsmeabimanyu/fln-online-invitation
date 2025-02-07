@@ -1,6 +1,7 @@
 {% extends 'layouts/base_invitation.html' %}
 {% block content %}
 {% load static %}
+
 <div class="row mb-2 justify-content-center">
     <div class="col-1">
         <div class="row">
@@ -70,8 +71,44 @@
     </div>
 </div>
 <div class="row mb-2 justify-content-center">
-    <button type="button" id="add-row" class="btn btn-info mt-3 w-75" onclick="window.location.href='{% url 'participant_register' item.id %}'">
+    <!-- <button type="button" id="add-row" class="btn btn-info mt-3 w-75" onclick="">
     Register Now!
+    </button> -->
+    <button class="btn btn-primary mt-3 w-75" id="toggleButton" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+        Register Now!
     </button>
 </div>
+
+<div class="collapse mt-4" id="collapseExample">
+    <form method="post">
+        {% csrf_token %}
+        <div id="guest-names-container">
+            <p class="card-text">{{ description_title_form }}</p>
+            <div class="mb-3">
+                <label for="organization" class="form-label">Organization<span class="text-danger"> *</span></label>
+                <input id="organization" type="text" class="form-control mt-1" name="organization" placeholder="Enter your organization name" required>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email<span class="text-danger"> *</span></label>
+                <input id="email" type="email" class="form-control mt-1" name="email" placeholder="Enter your email" aria-describedby="emailHelp" required>
+                <div id="emailHelp" class="form-text ms-2">Mandatory for email information.</div>        
+            </div>
+            <div class="guest-name-row">
+                <hr data-content="000" class="hr-text">
+                <div class="mb-3">
+                    <label for="guest_name" class="form-label">Name<span class="text-danger"> *</span></label>
+                    <input id="guest_name" type="text" class="form-control mt-1" name="guest_name" placeholder="Enter your name" required>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger remove-row">Remove</button>
+            </div>
+        </div>
+        <button type="button" id="add-row" class="btn btn-info mt-3 w-100">
+           <span class="align-middle"> Add Participant</span>
+        </button>
+        <button type="submit" class="btn btn-success mt-2 w-100">
+            <span class="align-middle">Register</span>
+        </button>
+    </form>
+</div>
 {% endblock content %}
+    

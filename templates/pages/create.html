@@ -29,33 +29,56 @@
                     <div class="table-responsive">
                         <table id="tbl_participant" class="display row-border" style="width:100%">
                             <thead>
-                                <tr><th>No</th> <!-- Kolom untuk nomor urut -->
-                                    <th>Guest Name</th>
-                                    <th>Guest Email (Optional)</th>
-                                    <th>Organization (Optional)</th>
+                                <tr>
+                                    <!-- Checkbox Check All di header -->
+                                    <th><input type="checkbox" class="form-check-input item-checkbox" id="select-all"></th>
+                                    <th>No</th> <!-- Kolom untuk nomor urut -->
+                                    <th>Guest Name<span class="text-danger"> *</span></th>
+                                    <th>Organization</th>
+                                    <th>Email<span class="text-danger"> *</span></th>
+                                    <th>Approve?</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in items %}
                                 <tr>
+                                    <td>
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input item-checkbox" name="approve" value="{{ item.id }}">
+                                        </div>
+                                    </td>
                                     <td>{{ forloop.counter }}</td>
                                     <td>{{ item.guest_name }}</td>
-                                    <td>{{ item.guest_email }}</td>
                                     <td>{{ item.organization }}</td>
+                                    <td>{{ item.email }}</td>
+                                    <td>{{ item.is_approved|yesno|capfirst }}</td>
                                     <td>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-info dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                              Option
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                              <li><a class="dropdown-item" href="#">Edit</a></li>
+                                              <li><button type="button" data-micromodal-trigger="modal-approve-{{ item.id }}" class="dropdown-item">{{ item.action|capfirst }}</button></li>
+                                              <li><button type="button" data-micromodal-trigger="modal-delete-{{ item.id }}" class="dropdown-item text-danger">Delete</button></li>
+                                            </ul>
+                                          </div>
                                         <!-- Optional: you can add actions like Edit or Delete -->
-                                        <a href="#" class="btn btn-warning btn-sm">Update</a>
-                                        <button type="button" data-micromodal-trigger="modal-{{ item.id }}" class="btn btn-danger btn-sm">Delete</button>
+                                        <!-- <a href="#" class="btn btn-warning btn-sm"><i data-feather="edit"></i></a>
+                                        <button type="button" data-micromodal-trigger="modal-approve-{{ item.id }}" class="btn btn-{{ item.action_color }} btn-sm"><i data-feather='check-circle'></i></button>
+                                        <button type="button" data-micromodal-trigger="modal-delete-{{ item.id }}" class="btn btn-danger btn-sm"><i data-feather="trash-2"></i></button> -->
                                     </td>
                                 </tr>
                                 {% endfor %}
                                 <tr>
+                                    <td></td>
                                     <td>{{items|length|add:1}}</td>
                                     <td><input type="text" class="form-control" name="guest_name" required></td>
-                                    <td><input type="email" class="form-control" name="guest_email"></td>
                                     <td><input type="text" class="form-control" name="organization"></td>
-                                    <td><button class="btn btn-danger btn-sm deleteRow">Delete</button></td> 
+                                    <td><input type="email" class="form-control" name="email" required></td>
+                                    <td></td>
+                                    <td><button class="btn btn-danger btn-sm deleteRow"><i data-feather="trash-2"></i></button></td> 
                                 </tr>
                                 <!-- More rows can be added here -->
                             </tbody>
@@ -66,96 +89,83 @@
                     <button type="button" id="addRow" class="btn btn-info">Add New Row</button>
                     <button type="submit" class="btn btn-success">Submit</button>
                 </div>
-                <script>
-                    $(document).ready(function() {
-                        var table = $('#tbl_participant').DataTable();
-                
-                        // Add new row when the "Add Row" button is clicked
-                        $('#addRow').on('click', function() {
-                            var rowCount = table.rows().count();  // Get current row count
-                            
-                            // Add a new row with input fields and a delete button
-                            table.row.add([
-                                rowCount + 1,  // Add row number (new row + 1)
-                                '<input type="text" class="form-control" name="guest_name" required>',
-                                '<input type="email" class="form-control" name="guest_email">',
-                                '<input type="text" class="form-control" name="organization">',
-                                '<button class="btn btn-danger btn-sm deleteRow">Delete</button>'
-                            ]).draw(false);  // draw(false) prevents table from scrolling to top
-                        });
-                
-                        // Delete row functionality
-                        $(document).on('click', '.deleteRow', function() {
-                            var row = $(this).closest('tr');  // Find the row that contains the clicked button
-                            
-                            // Ensure there's more than one row before allowing deletion
-                            if (table.rows().count() > 1) {
-                                table.row(row).remove().draw();  // Remove the row
-                                updateRowNumbers();  // Update row numbers after deletion
-                            } else {
-                                alert("You cannot delete the last row!");
-                            }
-                            
-                            // Update delete button visibility after deletion
-                            toggleDeleteButtonsVisibility();
-                        });
-                
-                        // Function to toggle delete button visibility based on row count
-                        function toggleDeleteButtonsVisibility() {
-                            var deleteButtons = $('.deleteRow');
-                            if (table.rows().count() <= 1) {
-                                deleteButtons.hide();  // Hide delete buttons if there's 1 or fewer rows
-                            } else {
-                                deleteButtons.show();  // Show delete buttons if more than 1 row
-                            }
-                        }
-                
-                        // Update row numbers after a row is added or removed
-                        function updateRowNumbers() {
-                            table.rows().every(function(index) {
-                                var row = this.node();
-                                $(row).find('td:first').text(index + 1);  // Update row number in the first column
-                            });
-                        }
-                
-                        // Initial check on page load to adjust delete button visibility
-                        toggleDeleteButtonsVisibility();
-                    });
-                </script>
-                
             </form>
         </div>
     </div>
 </div>
 
-{% for item in items %}
-<!-- Modal untuk menghapus item -->
-<div class="modal micromodal-slide" id="modal-{{ item.id }}" aria-hidden="true">
-    <div class="modal__overlay" tabindex="-1" data-micromodal-close>
-        <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-{{ item.id }}-title">
-            <!-- Header Modal -->
-            <header class="modal__header">
-                <h2 class="modal__title" id="modal-{{ item.id }}-title">
-                    <strong>{{ title|title }}</strong> Delete
-                </h2>
-                <button class="modal__close" aria-label="Tutup modal" data-micromodal-close></button>
-            </header>
+{% block modal %}
+    {% include 'pages/modals/modal.html' %}
+{% endblock modal %}
 
-            <!-- Konten Modal -->
-            <main class="modal__content" id="modal-{{ item.id }}-content">
-                <p>Are you sure you want to delete {{ title }} <strong>{{ item.guest_name }}</strong>?</p>
-                <!-- Form untuk menghapus item -->
-                <form method="post" action="{% url 'participant_delete' pk=item.pk %}">
-                    {% csrf_token %}
-                    <div class="modal__footer">
-                        <button type="button" class="btn btn-secondary" data-micromodal-close>Cancel</button>
-                        <button type="submit" class="btn btn-danger">Delete</button>
-                    </div>
-                </form>
-            </main>
-        </div>
-    </div>
-</div>
-{% endfor %}
+<script>
+    $(document).ready(function() {
+        var table = $('#tbl_participant').DataTable({
+            "columnDefs": [
+                {
+                    "targets": 0,  // Kolom pertama (checkbox)
+                    "orderable": false,  // Menonaktifkan sortir pada kolom pertama
+                    "searchable": false  // Menonaktifkan pencarian pada kolom pertama (checkbox)
+                },
+                {
+                    "targets": 1,  // Kolom kedua (nomor urut)
+                    "orderable": true,  // Mengaktifkan sortir pada kolom kedua
+                    "searchable": false  // Menonaktifkan pencarian pada kolom nomor urut
+                }
+            ],
+            "order": [[1, 'asc']]  // Mengatur agar kolom nomor urut diurutkan secara default (ascending)
+        });
+
+        // Menambahkan baris baru saat tombol "Add Row" diklik
+        $('#addRow').on('click', function() {
+            // Menambahkan baris baru dengan checkbox di kolom pertama, input dan tombol delete
+            table.row.add([
+                '',  // Checkbox di kolom pertama
+                table.rows().count() + 1,  // Nomor urut otomatis berdasarkan jumlah baris
+                '<input type="text" class="form-control" name="guest_name" required>',
+                '<input type="text" class="form-control" name="organization">',
+                '<input type="email" class="form-control" name="email" required>',
+                '',
+                '<button class="btn btn-danger btn-sm deleteRow"><i data-feather="trash-2"></i></button>'
+            ]).draw(false);
+
+            updateRowNumbers();  // Memperbarui nomor urut setelah menambahkan baris
+
+            // Memanggil feather.replace() setelah menambahkan elemen baru
+            feather.replace();
+        });
+
+        // Menghapus baris saat tombol delete diklik
+        $(document).on('click', '.deleteRow', function() {
+            var row = $(this).closest('tr');  // Temukan baris yang mengandung tombol yang diklik
+            table.row(row).remove().draw();  // Hapus baris
+            updateRowNumbers();  // Memperbarui nomor urut setelah penghapusan baris
+        });
+
+        // Memperbarui nomor urut di setiap baris
+        function updateRowNumbers() {
+            table.rows().every(function(index) {
+                var row = this.node();
+                $(row).find('td').eq(1).text(index + 1);  // Mengupdate nomor urut di kolom kedua (index 1)
+            });
+        }
+
+        // Mengaktifkan fungsi "Select All" hanya untuk checkbox yang terlihat sesuai pencarian
+        $('#select-all').on('click', function() {
+            var isChecked = $(this).prop('checked');
+            // Memilih semua checkbox yang terlihat sesuai hasil pencarian
+            table.rows({ search: 'applied' }).nodes().to$().find('input[type="checkbox"]').each(function() {
+                $(this).prop('checked', isChecked);  // Setel checkbox sesuai dengan status "Select All"
+            });
+        });
+
+        // Memastikan checkbox hanya dipilih pada baris yang sesuai hasil pencarian
+        $('#tbl_participant').on('change', 'input[type="checkbox"]', function() {
+            // Menangani perubahan checkbox per baris
+            var rowData = table.row($(this).closest('tr')).data();
+            console.log(rowData);  // Menampilkan data baris terkait, jika dibutuhkan
+        });
+    });
+</script>
 
 {% endblock content %}

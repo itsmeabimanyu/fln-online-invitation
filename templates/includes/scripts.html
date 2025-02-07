@@ -1,10 +1,12 @@
 {% load static %}
 <script src="{% static 'js/app.js' %}"></script>
+<!-- Datatables -->
 <script>
     $(document).ready(function() {
         $('#example').DataTable();
       });
 </script>
+<!-- Preview Image -->
 <script>
     function previewImage(event) {
         var input = event.target;

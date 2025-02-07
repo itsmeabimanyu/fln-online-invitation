@@ -97,14 +97,22 @@ class Participant(models.Model):
     # organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="Instansi")
     organization = models.CharField(max_length=255, blank=True, null=True, verbose_name="Organization")
     guest_name = models.CharField(max_length=255, verbose_name="Name*")
-    guest_email = models.EmailField(validators=[EmailValidator()], blank=True, null=True, verbose_name="Email")
+    email = models.EmailField(validators=[EmailValidator()], blank=True, null=True, verbose_name="Email")
     is_attending = models.BooleanField(default=False, verbose_name="Hadir?")
     # additional_guests = models.PositiveIntegerField(default=0, verbose_name="Tamu Tambahan")
     # special_requests = models.TextField(blank=True, null=True, verbose_name="Permintaan Khusus")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Dibuat Pada")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Diperbarui Pada")
+    is_approved = models.BooleanField(default=False, verbose_name="Approve?")
 
     def __str__(self):
         return f"{self.guest_name}"
+    
+    class Meta:
+        ordering = ['created_at']
+
+    def approve_participant(self):
+        self.is_approved = True
+        self.save()
 
     
