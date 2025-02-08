@@ -26,14 +26,14 @@
             <div class="card-header px-4 pt-4 {% if not item.is_active  %}bg-secondary bg-opacity-25{% endif %}">
                 <div class="card-actions float-end">
                     <!-- Dropdown di sebelah kanan -->
-                    <div class="dropdown">
+                    <div class="dropdown position-relative">
                         <a href="#" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="true" class="show">
                             <i class="align-middle" data-feather="more-horizontal"></i> 
                         </a>
                         <div class="dropdown-menu dropdown-menu-end" data-bs-popper="static">
                             <!-- <a class="dropdown-item" href="{{ item.update_url }}">Edit</a> -->
                             <a href="{% url 'participant_create' item.id %}" class="dropdown-item">Participant</a>
-                            <a href="{% url 'invitation_detail' item.id %}" class="dropdown-item">Invitation</a>
+                            <a href="{% url 'invitation_create' item.id %}" class="dropdown-item">Invitation</a>
                             <a href="#" data-micromodal-trigger="modal-{{ item.id }}" class="dropdown-item">Edit</a>
                             <form method="post" action="{{ item.close_url }}" onsubmit="return confirm('Are you sure you want to {% if item.is_active %}close{% else %}open{% endif %} this event?');">
                                 {% csrf_token %}

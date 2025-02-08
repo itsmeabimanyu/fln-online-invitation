@@ -1,75 +1,108 @@
 {% extends 'layouts/base_invitation.html' %}
 {% block content %}
 {% load static %}
+<style>
+    .separator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: inherit;  /* Warna garis akan mengikuti warna teks induk */
+        margin: 1rem 0;  /* Menambahkan margin untuk memberikan jarak */
+    }
+    
+    .separator::before,
+    .separator::after {
+        content: '';
+        flex: 1;
+        border-top: var(--bs-border-width) solid;
+        border-color: inherit;  /* Warna garis akan mengikuti warna teks induk */
+        opacity: 0.25;  /* Menambahkan transparansi pada garis */
+    }
+      
+      .separator:not(:empty)::before {
+        margin-right: 0.5em; /* Memberikan ruang antara garis kiri dan teks */
+      }
+      
+      .separator:not(:empty)::after {
+        margin-left: 0.5em; /* Memberikan ruang antara garis kanan dan teks */
+      }
+</style>
+
+<!-- <div class="row mb-2 justify-content-center">
+    <div class="col-1">
+        <p class="card-text"><i class="align-middle me-2" data-feather="award"></i></p>
+    </div>
+    <div class="col-10 col-md-10">
+        <div class="text-md">Event</div>
+        <p class="text-md"><strong>{{ item.event.event_name }}</strong></p>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-1">
+        <p class="card-text"><i class="align-middle me-2" data-feather="calendar"></i></p>
+    </div>
+    <div class="col-5 col-md-5">
+        <div class="text-md">From</div>
+        <p class="text-md"><strong>{{ item.event.from_event_date|date:"D, j M Y" }}</strong></p>
+    </div>
+    <div class="col-5 col-md-5">
+        <div class="text-md">To</div>
+        <p class="text-md"><strong>{{ item.event.to_event_date|date:"D, j M Y" }}</strong></p>
+    </div>
+</div>
 
 <div class="row mb-2 justify-content-center">
     <div class="col-1">
-        <div class="row">
-            <p class="card-text"><i class="align-middle me-2" data-feather="award"></i></p>
-        </div>
+        <p class="card-text"><i class="align-middle me-2" data-feather="clock"></i></p>
     </div>
     <div class="col-10 col-md-10">
-        <div class="row">
-            <div class="text-md text-muted">Event</div>
-        </div>
-        <div class="row">
-            <p class="text-md"><strong>{{ item.event_name }}</strong></p>
-        </div>
+        <div class="text-md">Time</div>
+        <p class="text-md"><strong>{{ item.event.from_event_date|date:"g:i A" }} - {{ item.event.to_event_date|date:"g:i A" }}</strong></p>
+    </div>
+</div> -->
+
+<div class="row mt-4 justify-content-center">
+    <p class="card-text text-center"><i class="align-middle me-2" data-feather="award"></i>Event</p>
+    <div class="col-12">
+        <p class="fs-4 text-center"><strong>{{ item.event.event_name }}</strong></p>
     </div>
 </div>
 <div class="row justify-content-center">
-    <div class="col-1">
-        <div class="row">
-            <p class="card-text"><i class="align-middle me-2" data-feather="calendar"></i></p>
-        </div>
-    </div>
-    <div class="col-5 col-md-5">
-        <div class="row">
-            <div class="text-md text-muted">From</div>
-        </div>
-        <div class="row">
-            <p class="text-md"><strong>{{ item.from_event_date|date:"D, j M Y" }}</strong></p>
-        </div>
-    </div>
-    <div class="col-5 col-md-5">
-        <div class="row">
-            <div class="text-md text-muted">To</div>
-        </div>
-        <div class="row">
-            <p class="text-md"><strong>{{ item.from_event_date|date:"D, j M Y" }}</strong></p>
-        </div>
+    <p class="card-text text-center"><i class="align-middle me-2" data-feather="calendar"></i>Calendar</p>
+    <div class="col-12">
+        <p class="text-md text-center"><strong>{{ item.event.from_event_date|date:"D, j M Y" }} - {{ item.event.to_event_date|date:"D, j M Y" }}</strong></p>
     </div>
 </div>
-<div class="row mb-2 justify-content-center">
-    <div class="col-1">
-        <div class="row">
-            <p class="card-text"><i class="align-middle me-2" data-feather="clock"></i></p>
-        </div>
-    </div>
-    <div class="col-10 col-md-10">
-        <div class="row">
-            <div class="text-md text-muted">Time</div>
-        </div>
-        <div class="row">
-            <p class="text-md"><strong>{{ item.from_event_date|date:"g:i A" }} - {{ item.to_event_date|date:"g:i A" }}</strong></p>
-        </div>
+<div class="row justify-content-center">
+    <p class="card-text text-center"><i class="align-middle me-2" data-feather="clock"></i>Time</p>
+    <div class="col-12">
+        <p class="text-md text-center"><strong>{{ item.event.from_event_date|date:"g:i A" }} - {{ item.event.to_event_date|date:"g:i A" }}</strong></p>
     </div>
 </div>
-<div class="row mb-2 justify-content-center">
-    <div class="col-1">
-        <div class="row">
-            <p class="card-text"><i class="align-middle me-2" data-feather="map-pin"></i></p>
-        </div>
+
+{% if qr_image %}
+<div class="row justify-content-center">
+    <p class="card-text text-center"><i class="align-middle me-2" data-feather="map-pin"></i>Location</p>
+    <div class="col-12">
+        <p class="text-md text-center"><strong>{{ item.event.location|title }}</strong></p>
     </div>
-    <div class="col-10 col-md-10">
-        <div class="row">
-            <div class="text-md text-muted">Location</div>
-        </div>
-        <div class="row">
-            <p class="text-md"><strong>{{ item.location|title }}</strong></p>
-        </div>
+    <div class="separator w-50 text-center">OR</div>
+    <div class="col-12 text-center">
+        <img src="data:image/png;base64,{{ qr_image }}" alt="QR Code" class="w-50">
+        <p class="mt-1 text-sm">Scan here</p>
     </div>
 </div>
+{% else %}
+<div class="row justify-content-center">
+    <p class="card-text text-center"><i class="align-middle me-2" data-feather="map-pin"></i>Location</p>
+    <div class="col-12">
+        <p class="text-md text-center"><strong>{{ item.event.location|title }}</strong></p>
+    </div>
+</div>
+{% endif %}
+
 <div class="row mb-2 justify-content-center">
     <!-- <button type="button" id="add-row" class="btn btn-info mt-3 w-75" onclick="">
     Register Now!
@@ -80,35 +113,39 @@
 </div>
 
 <div class="collapse mt-4" id="collapseExample">
-    <form method="post">
-        {% csrf_token %}
-        <div id="guest-names-container">
-            <p class="card-text">{{ description_title_form }}</p>
-            <div class="mb-3">
-                <label for="organization" class="form-label">Organization<span class="text-danger"> *</span></label>
-                <input id="organization" type="text" class="form-control mt-1" name="organization" placeholder="Enter your organization name" required>
-            </div>
-            <div class="mb-3">
-                <label for="email" class="form-label">Email<span class="text-danger"> *</span></label>
-                <input id="email" type="email" class="form-control mt-1" name="email" placeholder="Enter your email" aria-describedby="emailHelp" required>
-                <div id="emailHelp" class="form-text ms-2">Mandatory for email information.</div>        
-            </div>
-            <div class="guest-name-row">
-                <hr data-content="000" class="hr-text">
-                <div class="mb-3">
-                    <label for="guest_name" class="form-label">Name<span class="text-danger"> *</span></label>
-                    <input id="guest_name" type="text" class="form-control mt-1" name="guest_name" placeholder="Enter your name" required>
+    <div class="row mb-2 justify-content-center">
+        <div class="col-8 col-md-10">
+            <form method="post">
+                {% csrf_token %}
+                <div id="guest-names-container" >
+                    <p class="card-text text-center">{{ description_title_form }}</p>
+                    <div class="mb-3">
+                        <label for="organization" class="form-label">Organization<span class="text-danger"> *</span></label>
+                        <input id="organization" type="text" class="form-control mt-1" name="organization" placeholder="Enter your organization name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email<span class="text-danger"> *</span></label>
+                        <input id="email" type="email" class="form-control mt-1" name="email" placeholder="Enter your email" aria-describedby="emailHelp" required>
+                        <div id="emailHelp" class="form-text ms-2">Mandatory for email information.</div>        
+                    </div>
+                    <div class="guest-name-row">
+                        <hr data-content="000" class="hr-text">
+                        <div class="mb-3">
+                            <label for="guest_name" class="form-label">Name<span class="text-danger"> *</span></label>
+                            <input id="guest_name" type="text" class="form-control mt-1" name="guest_name" placeholder="Enter your name" required>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-danger remove-row">Remove</button>
+                    </div>
                 </div>
-                <button type="button" class="btn btn-sm btn-danger remove-row">Remove</button>
-            </div>
+                <button type="button" id="add-row" class="btn btn-info mt-3 w-100">
+                <span class="align-middle"> Add Participant</span>
+                </button>
+                <button type="submit" class="btn btn-success mt-2 w-100">
+                    <span class="align-middle">Register</span>
+                </button>
+            </form>
         </div>
-        <button type="button" id="add-row" class="btn btn-info mt-3 w-100">
-           <span class="align-middle"> Add Participant</span>
-        </button>
-        <button type="submit" class="btn btn-success mt-2 w-100">
-            <span class="align-middle">Register</span>
-        </button>
-    </form>
+    </div>
 </div>
 {% endblock content %}
     

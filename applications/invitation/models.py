@@ -115,4 +115,14 @@ class Participant(models.Model):
         self.is_approved = True
         self.save()
 
+class InvitationStyle(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="event", verbose_name="Event")
+    greeting_title = models.CharField(max_length=255, null=True, blank=True, verbose_name="Greeting Title")
+    greeting_description = models.CharField(max_length=255, null=True, blank=True, verbose_name="Greeting Description")
+    image = models.ImageField(upload_to='images/', null=True, blank=True, verbose_name="Image")
+    appreciation_image = models.ImageField(upload_to='images/', null=True, blank=True, verbose_name="Appreciation Image")
+    appreciation_text = models.CharField(max_length=255, null=True, blank=True, verbose_name="Appreciation Text")
+    # set_as_background = models.BooleanField(default=False, verbose_name="Set as Background Image?")
+    enable_dark_mode = models.BooleanField(default=False, verbose_name="Enable Dark Mode?")
     

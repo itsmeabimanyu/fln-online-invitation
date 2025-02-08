@@ -2,14 +2,16 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, UpdateView, View, CreateView, DetailView, TemplateView
-from .models import Event, Participant
-from .forms import EventForm, ParticipantForm, ParticipantRegisterForm
+from .models import Event, Participant, InvitationStyle
+from .forms import EventForm, ParticipantForm, ParticipantRegisterForm, InvitationStyleForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 import os
 from PIL import Image
 from io import BytesIO
 from django.core.files.base import ContentFile
 from django.contrib import messages
+import qrcode
+import base64
 
 # Create your views here.
 '''def crop_image(image, target_width, target_height):
@@ -227,7 +229,62 @@ class ParticipantApproveView(View):
 
         return redirect(self.request.META.get('HTTP_REFERER'))
 
-# INVITATION
+# Chapter: Invitation
+class InvitationStyleCreateView(CreateView):
+    model = InvitationStyle
+    form_class = InvitationStyleForm
+    template_name = 'pages/invitation/create.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        # Get the event using the 'pk' from the URL kwargs
+        self.event = get_object_or_404(Event, pk=self.kwargs.get('pk'))
+
+        # Check if the InvitationStyle already exists for the event
+        try:
+            invitation_style = InvitationStyle.objects.get(event=self.event)
+            # If it exists, redirect to the update page
+            return HttpResponseRedirect(reverse('invitation_update', kwargs={'pk': invitation_style.id}))
+        except InvitationStyle.DoesNotExist:
+            # If it does not exist, proceed to the creation view
+            pass
+
+        # If no redirection occurs, proceed with the normal dispatch
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "invitation"
+        context["title_action"] = "create"
+        context["event"] = get_object_or_404(Event, id=self.event.id)
+        context["text_submit"] = "Create & View"
+        return context
+    
+    def form_valid(self, form):
+        # Menyimpan event sebagai foreign key di model Invitation
+        form.instance.event = self.event
+        form.save()
+        return HttpResponseRedirect(reverse('invitation_detail', kwargs={'pk': self.event.pk}))
+    
+class InvitationStyleUpdateView(UpdateView):
+    model = InvitationStyle
+    form_class = InvitationStyleForm
+    template_name = 'pages/invitation/create.html'
+    context_object_name = 'item'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "invitation"
+        context["title_action"] = "update"
+        context["event"] = self.object.event.event_name
+        context["text_submit"] = "Update & View"
+        context["additional_button"] = f"<button type='button' class='btn btn-primary' onclick='window.location.href=\"{reverse('invitation_detail', args=[self.object.event.id])}\"'>View</button>"
+        return context
+
+    def form_valid(self, form):
+        invitation_style = form.save(commit=False)
+        invitation_style.save()
+        return HttpResponseRedirect(reverse('invitation_detail', kwargs={'pk': self.object.event.id}))
+
 class InvitationView(CreateView):
     model = Participant
     form_class = ParticipantRegisterForm
@@ -268,11 +325,66 @@ class InvitationView(CreateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["title"] = "You Are Invited!"
-        context["description_title"] = "It is our pleasure to invite you to join us for a special occasion."
         context["description_title_form"] = "Please kindly fill out the form below."
-        context["item"] = get_object_or_404(Event, id=self.event.id)
+        item = get_object_or_404(InvitationStyle, event=self.event)
+        item.background = "background-color: #2e313d;" if item.enable_dark_mode else "background-color: #e8e7ea;"
+        item.card_color = "background-color: #353744; color: #bdc4c9" if item.enable_dark_mode else "background-color: #fff;"
+        context["item"] = item
+        if self.event.maps_location:
+            # Membuat QR Code berdasarkan maps_location (misalnya URL)
+            qr = qrcode.QRCode(
+                version=1,  # Ukuran QR code
+                error_correction=qrcode.constants.ERROR_CORRECT_L,  # Level koreksi kesalahan
+                box_size=10,  # Ukuran box pada QR code
+                border=4,  # Ketebalan border
+            )
+            qr.add_data(self.event.maps_location)  # Menambahkan data ke QR code
+            qr.make(fit=True)
+
+            # Membuat gambar QR code dengan foreground hitam dan background putih
+            img = qr.make_image(fill='black', back_color='white')
+            if item.enable_dark_mode:
+                img = qr.make_image(fill_color='papayawhip', back_color='white')
+
+            # Mengonversi gambar menjadi format PNG dengan background transparan
+            img = img.convert("RGBA")  # Convert to RGBA (supports transparency)
+            datas = img.getdata()
+
+            # Membuat background transparan
+            new_data = []
+            for item in datas:
+                # Mengubah warna putih menjadi transparan
+                if item[0] == 255 and item[1] == 255 and item[2] == 255:
+                    new_data.append((255, 255, 255, 0))  # Transparan
+                else:
+                    new_data.append(item)
+            img.putdata(new_data)
+
+            # Menyimpan gambar ke dalam buffer BytesIO (in-memory image)
+            qr_image = BytesIO()
+            img.save(qr_image, "PNG")
+            qr_image.seek(0)
+
+            # Mengonversi gambar menjadi base64
+            qr_image_base64 = base64.b64encode(qr_image.getvalue()).decode('utf-8')
+
+            # Menambahkan string base64 ke dalam context
+            context['qr_image'] = qr_image_base64
+
         return context
     
 class ParticipantSuccessRegisterView(TemplateView):
     template_name = 'pages/invitation/success_register.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.event = get_object_or_404(Event, pk=self.kwargs.get('pk'))
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["description_title_form"] = "Please kindly fill out the form below."
+        item = get_object_or_404(InvitationStyle, event=self.event)
+        item.background = "background-color: #2e313d;" if item.enable_dark_mode else "background-color: #e8e7ea;"
+        item.card_color = "background-color: #353744; color: #bdc4c9" if item.enable_dark_mode else "background-color: #fff;"
+        context["item"] = item
+        return context

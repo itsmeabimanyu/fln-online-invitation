@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.core.validators import MinValueValidator
-from .models import Event, Participant
+from .models import Event, Participant, InvitationStyle
 
 class EventForm(forms.ModelForm):
     class Meta:
@@ -76,3 +76,55 @@ class ParticipantRegisterForm(forms.ModelForm):
                 field.widget.attrs.update({'class': 'form-control m-2 parsley-error'})
             else:
                 field.widget.attrs.update({'class': 'form-control m-2'})
+
+
+class InvitationStyleForm(forms.ModelForm):
+    greeting_title = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter greeting title'
+        }),
+        initial='You Are Invited!'  # Set default value here
+    )
+    
+    greeting_description = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter greeting description',
+            'rows': 3, 'cols': 50
+        }),
+        initial='It is our pleasure to invite you to join us for a special occasion.'  # Set default value here
+    )
+
+    appreciation_text = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter appreciation text',
+            'rows': 3, 'cols': 50
+        }),
+        initial='Thank you for your response. You will now wait for further updates from us.'  # Set default value here
+    )
+
+    class Meta:
+        model = InvitationStyle
+        fields = [
+            'greeting_title', 
+            'greeting_description', 
+            'image', 
+            'appreciation_image', 
+            'appreciation_text', 
+            # 'set_as_background', 
+            'enable_dark_mode'
+        ]
+        widgets = {
+            'image': forms.ClearableFileInput(attrs={'class': 'form-control', 'type': 'file'}),
+            'appreciation_image': forms.ClearableFileInput(attrs={'class': 'form-control', 'type': 'file'}),
+            # 'set_as_background': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'enable_dark_mode': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        labels = {
+            'enable_dark_mode': 'Enable Dark Mode?',
+        }
+        help_texts = {
+            'greeting_description': 'Please provide a description for the greeting message.',
+        }

@@ -1,13 +1,9 @@
 {% extends 'layouts/base_invitation.html' %}
 {% block content %}
 {% load static %}
-<div class="row justify-content-center w-100 p-5">
-    <div class="col-xl-12">
-        <!-- <h1 class="card-text mb-4 text-center">Thank You!</h1> -->
-        <div class="card-header p-0">
-            <img src="{% static 'images/default_thanks.jpeg' %}" class="img-fluid w-100" alt="Thanks">
-        </div>
-        <p class="card-text text-center">Thank you for your response. You will now wait for further updates from us.</p>
-    </div>
+<div class="text-center d-flex flex-column justify-content-center align-items-center">
+    <img src="{% static 'images/default_thanks.png' %}" class="w-50" alt="Thanks">
+    <p class="card-text">Thank you for your response. You will now wait for further updates from us.</p>
+    <a href="{% url 'invitation_detail' item.event.id %}" class="btn btn-primary mt-4 mb-2">Return to Invitation Page</a>
 </div>
 {% endblock content %}
