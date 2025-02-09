@@ -44,7 +44,7 @@ import base64
 class EventCreateView(CreateView):
     model = Event
     form_class = EventForm
-    template_name = 'pages/events_create.html'
+    template_name = 'pages/invitation/create.html'
     context_object_name = 'item'
     success_url = reverse_lazy('event_list') 
 
@@ -54,6 +54,8 @@ class EventCreateView(CreateView):
         items = self.model.objects.filter(deleted_at__isnull=True)
         context["items"] = items
         context["title_action"] = " Create"
+        context["subtitle"] = " Create New"
+        context["text_submit"] = "Create"
         return context
     
 class EventListView(ListView):
@@ -79,7 +81,7 @@ class EventListView(ListView):
 class EventUpdateView(UpdateView):
     model = Event
     form_class = EventForm
-    template_name = 'pages/events_create.html'
+    template_name = 'pages/invitation/create.html'
     context_object_name = 'item'
     success_url = reverse_lazy('event_list')
 
@@ -89,6 +91,9 @@ class EventUpdateView(UpdateView):
         items = self.model.objects.filter(deleted_at__isnull=True)
         context["items"] = items
         context["title_action"] = " Update"
+        context["subtitle"] = f"Update {self.object.event_name}"
+        context["text_submit"] = "Update"
+        context["active_status"] = self.object.is_active
         return context
     
     def form_valid(self, form):
@@ -272,8 +277,9 @@ class InvitationStyleCreateView(CreateView):
         context = super().get_context_data(**kwargs)
         context["title"] = "invitation"
         context["title_action"] = "create"
-        context["event"] = get_object_or_404(Event, id=self.event.id)
+        context["subtitle"] = get_object_or_404(Event, id=self.event.id)
         context["text_submit"] = "Create & View"
+        context["active_status"] = self.event.is_active
         return context
     
     def form_valid(self, form):
@@ -292,8 +298,9 @@ class InvitationStyleUpdateView(UpdateView):
         context = super().get_context_data(**kwargs)
         context["title"] = "invitation"
         context["title_action"] = "update"
-        context["event"] = self.object.event.event_name
+        context["subtitle"] = self.object.event.event_name
         context["text_submit"] = "Update & View"
+        context["active_status"] = self.event.is_active
         context["additional_button"] = f"<button type='button' class='btn btn-primary' onclick='window.location.href=\"{reverse('invitation_detail', args=[self.object.event.id])}\"'>View</button>"
         return context
 

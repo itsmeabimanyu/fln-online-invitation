@@ -8,7 +8,7 @@
 
     <div class="col-auto ms-auto text-end mt-n1">
         <a href="#" data-micromodal-trigger="modal-1" class="btn btn-success">New Event</a>
-        <!-- <a href="{% url 'event_create' %}" class="btn btn-success">New Event</a> -->
+        <button class="btn btn-primary" onclick="window.location.href='{% url 'event_create' %}'">New Event</button>
     </div>
 </div>
 <div class="row">
@@ -35,6 +35,8 @@
                             <a href="{% url 'participant_create' item.id %}" class="dropdown-item">Participant</a>
                             <a href="{% url 'invitation_create' item.id %}" class="dropdown-item">Invitation</a>
                             <a href="#" data-micromodal-trigger="modal-{{ item.id }}" class="dropdown-item">Edit</a>
+                            <button class="dropdown-item btn btn-primary" onclick="window.location.href='{% url 'event_update' item.id %}'">Update</button>
+                            
                             <form method="post" action="{{ item.close_url }}" onsubmit="return confirm('Are you sure you want to {% if item.is_active %}close{% else %}open{% endif %} this event?');">
                                 {% csrf_token %}
                                 <button type="submit" class="dropdown-item">{% if item.is_active %}Close event{% else %}Open event{% endif %}</button>
@@ -56,22 +58,25 @@
                             <p class="card-text"><i class="align-middle me-2" data-feather="calendar"></i></p>
                         </div>
                     </div>
+                    {% if item.event.from_event_date|date == item.event.to_event_date|date %}
                     <div class="col-5 col-md-5">
                         <div class="row">
                             <div class="text-md text-muted">From</div>
                         </div>
                         <div class="row">
-                            <p class="text-md"><strong>{{ item.from_event_date|date:"j M Y" }}</strong></p>
+                            <p class="text-md"><strong>{{ item.from_event_date|date:"D, j M Y" }}</strong></p>
                         </div>
                     </div>
+                    {% else %}
                     <div class="col-5 col-md-5">
                         <div class="row">
                             <div class="text-md text-muted">To</div>
                         </div>
                         <div class="row">
-                            <p class="text-md"><strong>{{ item.from_event_date|date:"j M Y" }}</strong></p>
+                            <p class="text-md"><strong>{{ item.from_event_date|date:"D, j M Y" }}</strong></p>
                         </div>
                     </div>
+                    {% endif %}
                 </div>
                 <div class="row mb-2">
                     <div class="col-1">

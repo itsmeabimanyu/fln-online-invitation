@@ -9,31 +9,29 @@ from .models import Event, Participant, InvitationStyle
 class EventForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ["image", "event_name", "description", "location", "maps_location", "from_event_date", "to_event_date" ]
+        fields = ["event_name", "description", "location", "maps_location", "from_event_date", "to_event_date", "image" ]
         widgets = {
-            'image': forms.ClearableFileInput(attrs={
-                'id': 'imageInput',  # ID untuk input gambar
-                'onchange': 'previewImage(event)',  # Menambahkan event onchange
-            }),
-            'event_name': forms.Textarea(attrs={'rows': 2}),
+            # 'image': forms.ClearableFileInput(attrs={
+            #    'id': 'imageInput',  # ID untuk input gambar
+            #    'onchange': 'previewImage(event)',  # Menambahkan event onchange
+            # }),
+            # 'event_name': forms.Textarea(attrs={'rows': 2}),
             'from_event_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'to_event_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'location': forms.Textarea(attrs={'rows': 2}),  # Batasi textarea menjadi 2 baris
-            'maps_location': forms.Textarea(attrs={'rows': 2}),
+            # 'maps_location': forms.Textarea(attrs={'rows': 2}),
             'description': forms.Textarea(attrs={'rows': 2}),
-        }
-        labels = {
-            'maps_location': 'Maps location (optional)', 
-            'description': 'Description (optional)'
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
             if self.errors.get(field_name):
-                field.widget.attrs.update({'class': 'form-control parsley-error'})
+                field.widget.attrs.update({'class': 'form-control mt-2 parsley-error'})
             else:
-                field.widget.attrs.update({'class': 'form-control'})
+                field.widget.attrs.update({'class': 'form-control mt-2'})
+
+            field.widget.attrs.update({'autocomplete': 'off'})
 
             # Add specific class for 'unit' field if it exists
             '''if field_name == 'description':

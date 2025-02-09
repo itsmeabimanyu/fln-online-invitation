@@ -6,16 +6,17 @@ from PIL import Image
 from django.core.files.base import ContentFile
 import io
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.exceptions import ValidationError
 
 # Event Model - As before, representing an event to which people or companies are invited
 class Event(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    event_name = models.TextField()
-    from_event_date = models.DateTimeField()
-    to_event_date = models.DateTimeField()
-    description = models.TextField(blank=True, null=True)
-    location = models.TextField()
-    maps_location = models.TextField(blank=True, null=True)
+    event_name = models.CharField(max_length=255, verbose_name="Event Name*")
+    from_event_date = models.DateTimeField(verbose_name="From Event Date*")
+    to_event_date = models.DateTimeField(verbose_name="To Event Date*")
+    description = models.TextField(blank=True, null=True, verbose_name="Event Description")
+    location = models.TextField(verbose_name="Location*")
+    maps_location = models.CharField(max_length=255, null=True, blank=True, verbose_name="Maps location")
     # event_type = models.CharField(max_length=50)  # e.g., "Wedding", "Conference"
     image = models.ImageField(upload_to='images/', null=True, blank=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -24,6 +25,12 @@ class Event(models.Model):
 
     def __str__(self):
         return self.event_name
+    
+    def clean(self):
+        # Check if 'to_event_date' is earlier than 'from_event_date'
+        if self.to_event_date < self.from_event_date:
+            raise ValidationError("The 'To Event Date' cannot be earlier than the 'From Event Date'.")
+            messages.success(self.request, 'Thank you for your response! You will now wait for a response from us.')
     
     def soft_delete(self):
         self.deleted_at = timezone.now()  # Set waktu penghapusan
@@ -38,6 +45,7 @@ class Event(models.Model):
         self.save()
 
     def save(self, *args, **kwargs):
+        self.clean()
         if self.image:
             # Buka gambar yang diupload
             img = Image.open(self.image)

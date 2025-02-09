@@ -45,7 +45,11 @@
 <div class="row justify-content-center">
     <p class="card-text text-center"><i class="align-middle me-2" data-feather="calendar"></i>Calendar</p>
     <div class="col-12">
+        {% if item.event.from_event_date|date == item.event.to_event_date|date %}
+        <p class="text-md text-center"><strong>{{ item.event.from_event_date|date:"l, j M Y" }}</strong></p>
+        {% else %}
         <p class="text-md text-center"><strong>{{ item.event.from_event_date|date:"D, j M Y" }} - {{ item.event.to_event_date|date:"D, j M Y" }}</strong></p>
+        {% endif %}
     </div>
 </div>
 <div class="row justify-content-center">

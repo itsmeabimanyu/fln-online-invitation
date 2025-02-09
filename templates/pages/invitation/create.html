@@ -17,10 +17,10 @@
             <div class="card-header px-4 pt-4">
                 <div class="card-actions float-end">
                 </div>
-                <h3 class="fw-bolder">{{ event }}</h3>
-                <div class="badge {% if active_status %}bg-success{% else %}bg-danger{% endif %} my-2">
+                <p class="fs-3">{{ subtitle }}</p>
+                {% if active_status %}<div class="badge {% if active_status %}bg-success{% else %}bg-danger{% endif %} my-2">
                     {% if active_status %}Active{% else %}Inactive{% endif %}
-                </div>
+                </div>{% endif %}
             </div>
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
