@@ -18,20 +18,46 @@
           background: #999;
       }
       
-      hr.hr-text::before {
-          content: attr(data-content);
-          display: inline-block;
-          background: #fff;
-          font-weight: bold;
-          font-size: 0.85rem;
-          color: #999;
-          border-radius: 30rem;
-          padding: 0.2rem 2rem;
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-      }
+    hr.hr-text::before {
+        content: attr(data-content);
+        display: inline-block;
+        background: #fff;
+        font-weight: bold;
+        font-size: 0.85rem;
+        color: #999;
+        border-radius: 30rem;
+        padding: 0.2rem 2rem;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .separator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: inherit;  /* Warna garis akan mengikuti warna teks induk */
+        margin: 1rem 0;  /* Menambahkan margin untuk memberikan jarak */
+    }
+    
+    .separator::before,
+    .separator::after {
+        content: '';
+        flex: 1;
+        border-top: var(--bs-border-width) solid;
+        border-color: inherit;  /* Warna garis akan mengikuti warna teks induk */
+        opacity: 0.25;  /* Menambahkan transparansi pada garis */
+    }
+      
+    .separator:not(:empty)::before {
+        margin-right: 0.5em; /* Memberikan ruang antara garis kiri dan teks */
+    }
+    
+    .separator:not(:empty)::after {
+        margin-left: 0.5em; /* Memberikan ruang antara garis kanan dan teks */
+    }
 </style>
 {% endblock extrastyle %}
 {% block extrahead %}

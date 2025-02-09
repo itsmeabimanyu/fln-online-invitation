@@ -98,7 +98,8 @@ class Participant(models.Model):
     organization = models.CharField(max_length=255, blank=True, null=True, verbose_name="Organization")
     guest_name = models.CharField(max_length=255, verbose_name="Name*")
     email = models.EmailField(validators=[EmailValidator()], blank=True, null=True, verbose_name="Email")
-    is_attending = models.BooleanField(default=False, verbose_name="Hadir?")
+    is_attending = models.BooleanField(default=False, verbose_name="Is attending")
+    attendance_time = models.DateTimeField(null=True, blank=True)
     # additional_guests = models.PositiveIntegerField(default=0, verbose_name="Tamu Tambahan")
     # special_requests = models.TextField(blank=True, null=True, verbose_name="Permintaan Khusus")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Dibuat Pada")
@@ -113,6 +114,11 @@ class Participant(models.Model):
 
     def approve_participant(self):
         self.is_approved = True
+        self.save()
+
+    def mark_attendance(self):
+        self.is_attending = True
+        self.attendance_time = timezone.now()  # Get the current time
         self.save()
 
 class InvitationStyle(models.Model):

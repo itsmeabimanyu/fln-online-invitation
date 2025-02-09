@@ -122,9 +122,11 @@ class ParticipantListView(ListView):
     template_name = 'pages/participants_list.html'
     context_object_name = 'items_list'
 
-    """def get_queryset(self):
+    """
+    def get_queryset(self):
         queryset = super().get_queryset()
-        return queryset.filter(deleted_at__isnull=True).order_by('-is_active', 'from_event_date')"""
+        return queryset.filter(deleted_at__isnull=True).order_by('-is_active', 'from_event_date')
+    """
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -169,7 +171,9 @@ class ParticipantCreateView(CreateView):
         for item in object_item:
             item.delete_url = reverse('participant_delete', kwargs={'pk': item.pk})
             item.approve_url = reverse('participant_approve', kwargs={'pk': item.pk})
+            item.attendance_url = reverse('participant_attendance', kwargs={'pk': item.pk})
             item.action = "reject" if item.is_approved else "approve"
+            item.action_attendance = "mark not attending" if item.is_attending else "mark attending"
             item.action_color = "info" if item.is_approved else "secondary"
         context["items"] = object_item
         return context
@@ -226,6 +230,19 @@ class ParticipantApproveView(View):
             item.save()
         else:
             item.approve_participant()      
+
+        return redirect(self.request.META.get('HTTP_REFERER'))
+    
+class ParticipantAttendanceView(View):
+    def post(self, request, pk):
+        item = get_object_or_404(Participant, pk=pk)
+
+        if item.is_attending:
+            item.is_attending = False
+            item.attendance_time = None
+            item.save()
+        else:
+            item.mark_attendance()
 
         return redirect(self.request.META.get('HTTP_REFERER'))
 
@@ -289,7 +306,7 @@ class InvitationView(CreateView):
     model = Participant
     form_class = ParticipantRegisterForm
     # fields = ["organization", "guest_name"]
-    template_name = 'pages/invitation/invitation_view.html'
+    template_name = 'pages/invitation/view.html'
     context_object_name = 'item'
 
     def dispatch(self, request, *args, **kwargs):

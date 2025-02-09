@@ -36,7 +36,7 @@
             <!-- Header Modal -->
             <header class="modal__header">
                 <h2 class="modal__title" id="modal-approve-{{ item.id }}-title">
-                    <strong>{{ title|title }}</strong> {{ item.action|capfirst }}
+                    <strong>{{ title|title }}</strong> {{ item.action|title }}
                 </h2>
                 <button class="modal__close" aria-label="Tutup modal" data-micromodal-close></button>
             </header>
@@ -49,6 +49,35 @@
                     <div class="modal__footer">
                         <button type="button" class="btn btn-secondary" data-micromodal-close>Cancel</button>
                         <button type="submit" class="btn btn-success">{{ item.action|capfirst }}</button>
+                    </div>
+                </form>
+            </main>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% for item in items %}
+<!-- Modal untuk attendance item -->
+<div class="modal micromodal-slide" id="modal-attendance-{{ item.id }}" aria-hidden="true">
+    <div class="modal__overlay" tabindex="-1" data-micromodal-close>
+        <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-attendance-{{ item.id }}-title">
+            <!-- Header Modal -->
+            <header class="modal__header">
+                <h2 class="modal__title" id="modal-attendance-{{ item.id }}-title">
+                    <strong>{{ title|title }}</strong> {{ item.action_attendance|title }}
+                </h2>
+                <button class="modal__close" aria-label="Tutup modal" data-micromodal-close></button>
+            </header>
+            <!-- Konten Modal -->
+            <main class="modal__content" id="modal-{{ item.id }}-content">
+                <p>Are you sure you want to {{ item.action_attendance }} {{ title }} <strong>{{ item.guest_name }}</strong>?</p>
+                <!-- Form untuk menghapus item -->
+                <form method="post" action="{{ item.attendance_url }}">
+                    {% csrf_token %}
+                    <div class="modal__footer">
+                        <button type="button" class="btn btn-secondary" data-micromodal-close>Cancel</button>
+                        <button type="submit" class="btn btn-success">{{ item.action_attendance|capfirst }}</button>
                     </div>
                 </form>
             </main>
