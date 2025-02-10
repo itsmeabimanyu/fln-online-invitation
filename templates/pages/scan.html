@@ -1,0 +1,105 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+{% load static %}
+<style>
+    /* Menyesuaikan ukuran elemen pembaca QR Code */
+
+</style>
+<div class="row mb-2 mb-xl-3">
+    <div class="col-auto d-none d-sm-block">
+        <h3><strong>{{ title|title }}</strong> {{ title_action|title }}</h3>
+    </div>
+    <div class="col-auto ms-auto text-end mt-n1">
+        <!-- <a href="#" data-micromodal-trigger="modal-1" class="btn btn-success">New Event</a>
+        <a href="{% url 'event_create' %}" class="btn btn-success">New Event</a> -->
+        <button class="btn btn-primary" type="button" onclick="window.history.back();">Back</button>
+    </div>
+</div>
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card mb-4 border">
+            <div class="card-header px-4 pt-4">
+                <div class="card-actions float-end">
+                </div>
+                <p class="fs-3">{{ subtitle }}</p>
+                {% if active_status %}<div class="badge {% if active_status %}bg-success{% else %}bg-danger{% endif %} my-2">
+                    {% if active_status %}Active{% else %}Inactive{% endif %}
+                </div>{% endif %}
+            </div>
+            <div class="card-body">
+                <!-- Membuat row responsif dengan Bootstrap -->
+                <div class="row">
+                    <div class="col-xl-3">
+                        <div id="reader" class="border"></div>
+                    </div>
+                </div>
+                <!-- Tempat untuk menampilkan hasil scan QR Code -->
+                <!-- <div id="result" hx-get="{% url 'get_participant' %}"  hx-trigger="change" hx-target="#participant-details"></div> -->
+                <div id="result"></div>
+                <!-- Tempat untuk menampilkan data peserta -->
+                <div id="participant-details">
+                    <!-- Data peserta akan dimuat di sini -->
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function onScanSuccess(decodedText, decodedResult) {
+        // Menampilkan hasil pemindaian QR code
+        // document.getElementById('result').innerText = `QR Code Detected: ${decodedText}`;
+        // Set nilai di #result untuk memicu HTMX
+        //const resultDiv = document.getElementById('result');
+        //resultDiv.innerText = decodedText;  // Set hasil scan sebagai teks
+        //resultDiv.setAttribute('hx-vals', `{"qr_data": "${decodedText}"}`);  // Tambahkan parameter GET
+        //resultDiv.click();  // Memicu event change
+        // Kirim hasil scan ke backend Django
+        document.getElementById('result').innerText = `QR Code Detected: ${decodedText}`;
+        fetch('/get-participant/', {
+            method: 'GET', // GET request to include body
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ scanned_data: decodedText }) // Send as JSON body
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            // Handle the response data here, e.g., update the page with participant details
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    }
+    function onScanFailure(error) {
+        // Kamu bisa menangani error pemindaian jika perlu
+        console.warn(error);
+    }
+    // Inisialisasi pemindai QR code
+    const html5QrCode = new Html5Qrcode("reader");
+    // Square QR box with edge size = 70% of the smaller edge of the viewfinder.
+    let qrboxFunction = function(viewfinderWidth, viewfinderHeight) {
+        let minEdgePercentage = 0.7; // 70%
+        let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+        let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+        return {
+            width: qrboxSize,
+            height: qrboxSize
+        };
+    }
+    // Start scanning hanya dari kamera, tanpa mengizinkan pemindaian dari file gambar
+    html5QrCode.start(
+        { facingMode: "environment" },  // Memilih kamera belakang (environment camera)
+        {
+            fps: 10,  // frames per second, mengatur kecepatan pemindaian
+            qrbox: qrboxFunction  // ukuran area untuk pemindaian QR code
+        },
+        onScanSuccess,
+        onScanFailure
+    ).catch(err => {
+        console.error("Error during QR Code scanning: ", err);
+    });
+</script>
+{% endblock content %}

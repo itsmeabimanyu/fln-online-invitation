@@ -1,3 +1,5 @@
+{% load static custom_filters %}
+
 {% for item in items %}
 <!-- Modal untuk menghapus item -->
 <div class="modal micromodal-slide" id="modal-delete-{{ item.id }}" aria-hidden="true">
@@ -57,6 +59,7 @@
 </div>
 {% endfor %}
 
+{% comment %}
 {% for item in items %}
 <!-- Modal untuk attendance item -->
 <div class="modal micromodal-slide" id="modal-attendance-{{ item.id }}" aria-hidden="true">
@@ -81,6 +84,65 @@
                     </div>
                 </form>
             </main>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endcomment %}
+
+
+
+{% for item in items %}
+<!-- Modal untuk text_modal_first item -->
+<div class="modal micromodal-slide" id="modal-{{ item.text_modal_first }}-{{ item.id }}" aria-hidden="true">
+    <div class="modal__overlay" tabindex="-1" data-micromodal-close>
+        <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-{{ item.text_modal_first }}-{{ item.id }}-title">
+            <!-- Header Modal -->
+            <header class="modal__header">
+                <h2 class="modal__title" id="modal-{{ item.text_modal_first }}-{{ item.id }}-title">
+                    {{ item.text_modal_first|title }}
+                </h2>
+                <button class="modal__close" aria-label="Tutup modal" data-micromodal-close></button>
+            </header>
+            <!-- Konten Modal -->
+            <main class="modal__content" id="modal-{{ item.item.id }}-content">
+                <p>Are you sure you want to {{ item.li_first|lower }}"{{ item }}"?</p>
+                <!-- Form untuk menghapus item -->
+                <form method="post" action="{{ item.url_li_first }}">
+                    {% csrf_token %}
+                    <div class="modal__footer">
+                        <button type="button" class="btn btn-secondary" data-micromodal-close>Cancel</button>
+                        <button type="submit" class="btn btn-success">{{ item.li_first|capfirst }}</button>
+                    </div>
+                </form>
+            </main>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% for item in items %}
+<!-- Modal untuk text_modal_second item -->
+<div class="modal micromodal-slide" id="modal-{{ item.text_modal_second }}-{{ item.id }}" aria-hidden="true">
+    <div class="modal__overlay" tabindex="-1" data-micromodal-close>
+        <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-{{ item.text_modal_second }}-{{ item.id }}-title">
+            <!-- Header Modal -->
+            <header class="modal__header">
+                <h2 class="modal__title" id="modal-{{ item.text_modal_second }}-{{ item.id }}-title">
+                    {{ item.text_modal_second|title }}
+                </h2>
+                <button class="modal__close" aria-label="Tutup modal" data-micromodal-close></button>
+            </header>
+            <!-- Konten Modal -->
+            <main class="modal__content" id="modal-{{ item.item.id }}-content">
+                {% for field, value in fields.items %}
+                <p>{{ value }}: {{ item|get_field_value:field|safe }}</p>
+                {% endfor %}
+                <img src="{{ item.qr_image }}" alt="QR Code" class="w-50">
+            </main>
+            <div class="modal__footer">
+                <button type="button" class="btn btn-secondary" data-micromodal-close>Close</button>
+            </div>
         </div>
     </div>
 </div>

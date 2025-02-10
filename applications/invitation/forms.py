@@ -7,6 +7,24 @@ from django.core.validators import MinValueValidator
 from .models import Event, Participant, InvitationStyle
 
 class EventForm(forms.ModelForm):
+    event_name = forms.CharField(
+        max_length=100,
+        widget=forms.TextInput(attrs={'placeholder': 'Enter event name'}),
+        label='Event Name*'  # Label defined here
+    )
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={'placeholder': 'Enter event description'}),
+        label='Event Description'
+    )
+    location = forms.CharField(
+        max_length=200,
+        widget=forms.TextInput(attrs={'placeholder': 'Enter event location'}),
+        label='Event Location*'
+    )
+    maps_location = forms.URLField(
+        widget=forms.TextInput(attrs={'placeholder': 'Enter link to maps location'}),
+        label='Maps Location URL'
+    )
     class Meta:
         model = Event
         fields = ["event_name", "description", "location", "maps_location", "from_event_date", "to_event_date", "image" ]
@@ -18,10 +36,8 @@ class EventForm(forms.ModelForm):
             # 'event_name': forms.Textarea(attrs={'rows': 2}),
             'from_event_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'to_event_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-            'location': forms.Textarea(attrs={'rows': 2}),  # Batasi textarea menjadi 2 baris
-            # 'maps_location': forms.Textarea(attrs={'rows': 2}),
-            'description': forms.Textarea(attrs={'rows': 2}),
         }
+        
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -32,26 +48,6 @@ class EventForm(forms.ModelForm):
                 field.widget.attrs.update({'class': 'form-control mt-2'})
 
             field.widget.attrs.update({'autocomplete': 'off'})
-
-            # Add specific class for 'unit' field if it exists
-            '''if field_name == 'description':
-                field.widget.attrs.update({'class': 'form-control', "rows":"1"})'''
-
-            """if field_name in ['name']:
-                field.widget.attrs.update({'style': 'text-transform: uppercase;'})
-
-            '''if field_name in ['warehouse']:
-                field.widget.attrs.update({'class': 'basic form-control'})'''
-
-            # Optionally, add other attributes like autocomplete="off"
-            field.widget.attrs.update({'autocomplete': 'off'})
-
-    def clean(self):
-        cleaned_data = super().clean()
-        for field_name in ['name']:
-            if field_name in cleaned_data and cleaned_data[field_name]:
-                cleaned_data[field_name] = cleaned_data[field_name].upper()
-        return cleaned_data"""
             
 class ParticipantForm(forms.ModelForm):
     class Meta:
@@ -75,19 +71,16 @@ class ParticipantRegisterForm(forms.ModelForm):
             else:
                 field.widget.attrs.update({'class': 'form-control m-2'})
 
-
 class InvitationStyleForm(forms.ModelForm):
     greeting_title = forms.CharField(
         widget=forms.TextInput(attrs={
-            'class': 'form-control',
             'placeholder': 'Enter greeting title'
         }),
         initial='You Are Invited!'  # Set default value here
     )
-    
+
     greeting_description = forms.CharField(
         widget=forms.Textarea(attrs={
-            'class': 'form-control',
             'placeholder': 'Enter greeting description',
             'rows': 3, 'cols': 50
         }),
@@ -96,7 +89,6 @@ class InvitationStyleForm(forms.ModelForm):
 
     appreciation_text = forms.CharField(
         widget=forms.Textarea(attrs={
-            'class': 'form-control',
             'placeholder': 'Enter appreciation text',
             'rows': 3, 'cols': 50
         }),
@@ -114,15 +106,16 @@ class InvitationStyleForm(forms.ModelForm):
             # 'set_as_background', 
             'enable_dark_mode'
         ]
-        widgets = {
-            'image': forms.ClearableFileInput(attrs={'class': 'form-control', 'type': 'file'}),
-            'appreciation_image': forms.ClearableFileInput(attrs={'class': 'form-control', 'type': 'file'}),
-            # 'set_as_background': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'enable_dark_mode': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        }
-        labels = {
-            'enable_dark_mode': 'Enable Dark Mode?',
-        }
-        help_texts = {
-            'greeting_description': 'Please provide a description for the greeting message.',
-        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            if self.errors.get(field_name):
+                field.widget.attrs.update({'class': 'form-control mt-2 parsley-error'})
+            else:
+                field.widget.attrs.update({'class': 'form-control mt-2'})
+
+            if field_name in ['enable_dark_mode']:
+                field.widget.attrs.update({'class': 'form-check mt-2 form-check-input'})
+
+            field.widget.attrs.update({'autocomplete': 'off'})

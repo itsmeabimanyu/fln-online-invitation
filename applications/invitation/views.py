@@ -14,7 +14,8 @@ import qrcode
 import base64
 
 # Create your views here.
-'''def crop_image(image, target_width, target_height):
+'''
+def crop_image(image, target_width, target_height):
     img = Image.open(image)
     width, height = img.size
     target_ratio = 16 / 9
@@ -39,7 +40,8 @@ import base64
     output = BytesIO()
     img.save(output, format='JPEG')
     output.seek(0)
-    return ContentFile(output.read())'''
+    return ContentFile(output.read())
+'''
 
 class EventCreateView(CreateView):
     model = Event
@@ -122,6 +124,7 @@ class CloseEventView(View):
         # return redirect(self.request.META.get('HTTP_REFERER'))
         return redirect('event_list')
 
+# belum di pakai
 class ParticipantListView(ListView):
     model = Participant
     template_name = 'pages/participants_list.html'
@@ -237,19 +240,6 @@ class ParticipantApproveView(View):
             item.approve_participant()      
 
         return redirect(self.request.META.get('HTTP_REFERER'))
-    
-class ParticipantAttendanceView(View):
-    def post(self, request, pk):
-        item = get_object_or_404(Participant, pk=pk)
-
-        if item.is_attending:
-            item.is_attending = False
-            item.attendance_time = None
-            item.save()
-        else:
-            item.mark_attendance()
-
-        return redirect(self.request.META.get('HTTP_REFERER'))
 
 # Chapter: Invitation
 class InvitationStyleCreateView(CreateView):
@@ -300,7 +290,7 @@ class InvitationStyleUpdateView(UpdateView):
         context["title_action"] = "update"
         context["subtitle"] = self.object.event.event_name
         context["text_submit"] = "Update & View"
-        context["active_status"] = self.event.is_active
+        context["active_status"] = self.object.event.is_active
         context["additional_button"] = f"<button type='button' class='btn btn-primary' onclick='window.location.href=\"{reverse('invitation_detail', args=[self.object.event.id])}\"'>View</button>"
         return context
 
@@ -412,3 +402,74 @@ class ParticipantSuccessRegisterView(TemplateView):
         item.card_color = "background-color: #353744; color: #bdc4c9" if item.enable_dark_mode else "background-color: #fff;"
         context["item"] = item
         return context
+    
+# Chapter: Attendance
+class AttendanceListView(ListView):
+    model = Participant
+    template_name = 'pages/invitation/list.html'
+    context_object_name = 'items'
+    ordering = ['-attendance_time']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Attendance'
+        context['add_top_button'] = f"<button type='button' class='btn btn-info' onclick='window.location.href=\"{reverse('attendance_scan')}\"'>Scan Attendance</button>"
+        context['title_action'] = 'List'
+        context['text_submit'] = 'Create & View'
+        context['subtitle'] = 'Participant'
+        context['fields'] = {
+            'organization': 'Organization',
+            'guest_name': 'Guest Name',
+            'invitation': 'Event Invitation',
+            'attendance_time': 'Attendance Time',
+            'is_attending': 'Attendance?',
+        }
+
+        for item in context['items']:
+            item.li_first = 'Mark not attending ' if item.is_attending else 'Mark attending'
+            item.text_modal_first = 'attendance'
+            item.url_li_first = reverse('participant_attendance', kwargs={'pk': item.pk})
+            item.li_second = 'Details'
+            item.text_modal_second = 'details'
+
+            # Create a QR code
+            qr = qrcode.make(item.id)
+            # Save the QR code to a BytesIO object
+            img = BytesIO()
+            qr.save(img, 'PNG')
+            img.seek(0)
+            # Convert image to base64 string
+            qr_image_base64 = base64.b64encode(img.getvalue()).decode('utf-8')
+            # Add the base64 string to the item as qr_image
+            item.qr_image = f"data:image/png;base64,{qr_image_base64}"
+
+        return context
+
+class AttendanceScanView(TemplateView):
+    template_name = 'pages/scan.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Attendance'
+        context['title_action'] = 'View'
+        context['text_submit'] = 'Create & View'
+        context['subtitle'] = 'Scan QR Participant'
+
+        return context
+
+class ParticipantAttendanceView(View):
+    def post(self, request, pk):
+        item = get_object_or_404(Participant, pk=pk)
+        if item.is_attending:
+            item.is_attending = False
+            item.attendance_time = None
+            item.save()
+        else:
+            item.mark_attendance()
+        return redirect(self.request.META.get('HTTP_REFERER'))
+
+def GetParticipant(request):
+    # Memeriksa apakah 'scanned_data' ada dalam query string
+    scanned_data = request.GET.get('scanned_data')
+    print(f"Decoded text: {scanned_data}")
+    # return JsonResponse({"decodedText": decoded_text})

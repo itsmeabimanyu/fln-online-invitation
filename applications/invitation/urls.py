@@ -20,4 +20,8 @@ urlpatterns = [
     path('invitation/update/<uuid:pk>/', views.InvitationStyleUpdateView.as_view(), name='invitation_update'),
     path('invitation/<uuid:pk>/', views.InvitationView.as_view(), name='invitation_detail'),
     path('invitation/success/<uuid:pk>/', views.ParticipantSuccessRegisterView.as_view(), name='success_register'),
+
+    path('attendance/list/', views.AttendanceListView.as_view(), name='attendance_list'),
+    path('attendance/scan/', views.AttendanceScanView.as_view(), name='attendance_scan'),
+    path('get-participant/', views.GetParticipant, name='get_participant'),
 ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
