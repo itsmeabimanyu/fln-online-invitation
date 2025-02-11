@@ -7,24 +7,6 @@ from django.core.validators import MinValueValidator
 from .models import Event, Participant, InvitationStyle
 
 class EventForm(forms.ModelForm):
-    event_name = forms.CharField(
-        max_length=100,
-        widget=forms.TextInput(attrs={'placeholder': 'Enter event name'}),
-        label='Event Name*'  # Label defined here
-    )
-    description = forms.CharField(
-        widget=forms.Textarea(attrs={'placeholder': 'Enter event description'}),
-        label='Event Description'
-    )
-    location = forms.CharField(
-        max_length=200,
-        widget=forms.TextInput(attrs={'placeholder': 'Enter event location'}),
-        label='Event Location*'
-    )
-    maps_location = forms.URLField(
-        widget=forms.TextInput(attrs={'placeholder': 'Enter link to maps location'}),
-        label='Maps Location URL'
-    )
     class Meta:
         model = Event
         fields = ["event_name", "description", "location", "maps_location", "from_event_date", "to_event_date", "image" ]
@@ -33,7 +15,10 @@ class EventForm(forms.ModelForm):
             #    'id': 'imageInput',  # ID untuk input gambar
             #    'onchange': 'previewImage(event)',  # Menambahkan event onchange
             # }),
-            # 'event_name': forms.Textarea(attrs={'rows': 2}),
+            'maps_location': forms.TextInput(attrs={'placeholder': 'Enter link to maps location'}),
+            'location': forms.TextInput(attrs={'placeholder': 'Enter event location'}),
+            'event_name': forms.TextInput(attrs={'placeholder': 'Enter event name'}),
+            'description': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Enter event description'}),
             'from_event_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'to_event_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
         }

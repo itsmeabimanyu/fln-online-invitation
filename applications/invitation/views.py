@@ -19,39 +19,12 @@ from rest_framework.views import APIView
 from django.utils import timezone
 
 # Create your views here.
-'''
-def crop_image(image, target_width, target_height):
-    img = Image.open(image)
-    width, height = img.size
-    target_ratio = 16 / 9
-    current_ratio = width / height
 
-    if current_ratio > target_ratio:
-        new_width = int(height * target_ratio)
-        left = (width - new_width) // 2
-        top = 0
-        right = left + new_width
-        bottom = height
-    else:
-        new_height = int(width / target_ratio)
-        left = 0
-        top = (height - new_height) // 2
-        right = width
-        bottom = top + new_height
-
-    img = img.crop((left, top, right, bottom))
-    img = img.resize((target_width, target_height), Image.ANTIALIAS)
-
-    output = BytesIO()
-    img.save(output, format='JPEG')
-    output.seek(0)
-    return ContentFile(output.read())
-'''
-
+# Chapter: Event 
 class EventCreateView(CreateView):
     model = Event
     form_class = EventForm
-    template_name = 'pages/invitation/create.html'
+    template_name = 'pages/mainpages/create.html'
     context_object_name = 'item'
     success_url = reverse_lazy('event_list') 
 
@@ -60,11 +33,16 @@ class EventCreateView(CreateView):
         context["title"] = "Event"
         items = self.model.objects.filter(deleted_at__isnull=True)
         context["items"] = items
-        context["title_action"] = " Create"
-        context["subtitle"] = " Create New"
+        context["title_action"] = "Create"
+        context["subtitle"] = " Create View"
         context["text_submit"] = "Create"
         return context
     
+    def form_valid(self, form):
+        messages.success(self.request, 'Event created successfully!')
+        return super().form_valid(form)
+
+'''
 class EventListView(ListView):
     model = Event
     template_name = 'pages/events_list.html'
@@ -84,11 +62,50 @@ class EventListView(ListView):
             item.close_url = reverse('event_close', kwargs={'pk': item.id})
             item.form = EventForm(instance=item)
         return context
+'''
+    
+class EventListView(ListView):
+    model = Event
+    template_name = 'pages/mainpages/list.html'
+    context_object_name = 'items'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(deleted_at__isnull=True).order_by('-is_active', 'from_event_date')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Event'
+        context['add_top_button'] = f"<button type='button' class='btn btn-info' onclick='window.location.href=\"{reverse('event_create')}\"'>Create Event</button>"
+        context['title_action'] = 'List'
+        context['text_submit'] = 'Create & View'
+        context['subtitle'] = 'List View'
+        context['fields'] = {
+            'event_name': 'Event Name',
+            'location': 'Location',
+            'from_event_date': 'From Date',
+            'to_event_date': 'To Date',
+            'is_active': 'Is Active?'
+        }
+        for item in context['items']:
+            item.modal_first = f"<li><button type='button' data-micromodal-trigger='modal-first-{item.id}' class='dropdown-item text-danger'>Delete</button></li>"
+            item.action_modal_first = reverse('event_delete', kwargs={'pk': item.pk})
+            item.title_modal_first = 'Delete'
+
+            item.modal_second = f"<li><button type='button' data-micromodal-trigger='modal-second-{item.id}' class='dropdown-item'>{'Close Event' if item.is_active else 'Open Event'}</button></li>"
+            item.action_modal_second = reverse('event_close', kwargs={'pk': item.pk})
+            item.title_modal_second = 'Close Event' if item.is_active else 'Open Event'
+            
+            item.update_url = f"<li><button type='button' class='dropdown-item' onclick='window.location.href=\"{reverse('event_update', args=[item.id])}\"'>Edit</button></li>"
+            item.additional_url = f"<li><button type='button' class='dropdown-item' onclick='window.location.href=\"{reverse('invitation_create', args=[item.id])}\"'>Invitation</button></li>"
+            item.additional_url_01 = f"<li><button type='button' class='dropdown-item' onclick='window.location.href=\"{reverse('participant_create', args=[item.id])}\"'>Participant</button></li>"
+
+        return context
     
 class EventUpdateView(UpdateView):
     model = Event
     form_class = EventForm
-    template_name = 'pages/invitation/create.html'
+    template_name = 'pages/mainpages/create.html'
     context_object_name = 'item'
     success_url = reverse_lazy('event_list')
 
@@ -98,7 +115,7 @@ class EventUpdateView(UpdateView):
         items = self.model.objects.filter(deleted_at__isnull=True)
         context["items"] = items
         context["title_action"] = " Update"
-        context["subtitle"] = f"Update {self.object.event_name}"
+        context["subtitle"] = f"Update: {self.object.event_name}"
         context["text_submit"] = "Update"
         context["active_status"] = self.object.is_active
         return context
@@ -110,6 +127,7 @@ class EventUpdateView(UpdateView):
                 old_image_path = obj.image.path  
                 if os.path.exists(old_image_path):
                     os.remove(old_image_path)  # Hapus gambar lama
+        messages.success(self.request, 'Event updated successfully!')
         return super().form_valid(form)
     
 class SoftDeleteEventView(View):
@@ -117,16 +135,18 @@ class SoftDeleteEventView(View):
         item = get_object_or_404(Event, pk=pk)
         item.soft_delete() 
         # return redirect(self.request.META.get('HTTP_REFERER'))
+        messages.success(self.request, 'Event deleted successfully!')
         return redirect('event_list')
 
 class CloseEventView(View):
     def post(self, request, pk):
         item = get_object_or_404(Event, pk=pk)
         if item.is_active:
-            item.close_event()
+            item.close_event()  # Assuming this closes the event
+            messages.success(request, 'Event closed successfully!')
         else:
-            item.open_event()
-        # return redirect(self.request.META.get('HTTP_REFERER'))
+            item.open_event()  # Assuming this opens the event
+            messages.success(request, 'Event opened successfully!')
         return redirect('event_list')
 
 # belum di pakai
@@ -246,11 +266,24 @@ class ParticipantApproveView(View):
 
         return redirect(self.request.META.get('HTTP_REFERER'))
 
+class ParticipantAttendanceView(View):
+    def post(self, request, pk):
+        item = get_object_or_404(Participant, pk=pk)
+        if item.is_attending:
+            item.is_attending = False
+            item.attendance_time = None
+            item.save()
+            messages.success(request, 'Attendance marked as absent successfully.')  # Success message
+        else:
+            item.mark_attendance()
+            messages.success(request, 'Attendance marked successfully.')  # Success message
+        return redirect(self.request.META.get('HTTP_REFERER'))
+   
 # Chapter: Invitation
 class InvitationStyleCreateView(CreateView):
     model = InvitationStyle
     form_class = InvitationStyleForm
-    template_name = 'pages/invitation/create.html'
+    template_name = 'pages/mainpages/create.html'
 
     def dispatch(self, request, *args, **kwargs):
         # Get the event using the 'pk' from the URL kwargs
@@ -272,7 +305,7 @@ class InvitationStyleCreateView(CreateView):
         context = super().get_context_data(**kwargs)
         context["title"] = "invitation"
         context["title_action"] = "create"
-        context["subtitle"] = get_object_or_404(Event, id=self.event.id)
+        context["subtitle"] = f'Create: {get_object_or_404(Event, id=self.event.id)}'
         context["text_submit"] = "Create & View"
         context["active_status"] = self.event.is_active
         return context
@@ -286,14 +319,14 @@ class InvitationStyleCreateView(CreateView):
 class InvitationStyleUpdateView(UpdateView):
     model = InvitationStyle
     form_class = InvitationStyleForm
-    template_name = 'pages/invitation/create.html'
+    template_name = 'pages/mainpages/create.html'
     context_object_name = 'item'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "invitation"
         context["title_action"] = "update"
-        context["subtitle"] = self.object.event.event_name
+        context["subtitle"] = f'Update: {self.object.event.event_name}'
         context["text_submit"] = "Update & View"
         context["active_status"] = self.object.event.is_active
         context["additional_button"] = f"<button type='button' class='btn btn-primary' onclick='window.location.href=\"{reverse('invitation_detail', args=[self.object.event.id])}\"'>View</button>"
@@ -304,11 +337,12 @@ class InvitationStyleUpdateView(UpdateView):
         invitation_style.save()
         return HttpResponseRedirect(reverse('invitation_detail', kwargs={'pk': self.object.event.id}))
 
+# Chapter: Invitation additional
 class InvitationView(CreateView):
     model = Participant
     form_class = ParticipantRegisterForm
     # fields = ["organization", "guest_name"]
-    template_name = 'pages/invitation/view.html'
+    template_name = 'pages/additionals/invitation_view.html'
     context_object_name = 'item'
 
     def dispatch(self, request, *args, **kwargs):
@@ -393,7 +427,7 @@ class InvitationView(CreateView):
         return context
     
 class ParticipantSuccessRegisterView(TemplateView):
-    template_name = 'pages/invitation/success_register.html'
+    template_name = 'pages/additionals/success_register.html'
 
     def dispatch(self, request, *args, **kwargs):
         self.event = get_object_or_404(Event, pk=self.kwargs.get('pk'))
@@ -411,9 +445,13 @@ class ParticipantSuccessRegisterView(TemplateView):
 # Chapter: Attendance
 class AttendanceListView(ListView):
     model = Participant
-    template_name = 'pages/invitation/list.html'
+    template_name = 'pages/mainpages/list.html'
     context_object_name = 'items'
     ordering = ['-attendance_time']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(is_approved=True)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -431,11 +469,12 @@ class AttendanceListView(ListView):
         }
 
         for item in context['items']:
-            item.li_first = 'Mark not attending ' if item.is_attending else 'Mark attending'
-            item.text_modal_first = 'attendance'
-            item.url_li_first = reverse('participant_attendance', kwargs={'pk': item.pk})
-            item.li_second = 'Details'
-            item.text_modal_second = 'details'
+            item.modal_first = f"<li><button type='button' data-micromodal-trigger='modal-first-{item.id}' class='dropdown-item'>{'Mark not attending ' if item.is_attending else 'Mark attending'}</button></li>"
+            item.action_modal_first = reverse('participant_attendance', kwargs={'pk': item.pk})
+            item.title_modal_first = 'Attendance'
+
+            item.modal_third = f"<li><button type='button' data-micromodal-trigger='modal-third-{item.id}' class='dropdown-item'>Detail</button></li>"
+            item.text_modal_third = 'Details'
 
             # Create a QR code
             qr = qrcode.make(item.id)
@@ -449,30 +488,31 @@ class AttendanceListView(ListView):
             item.qr_image = f"data:image/png;base64,{qr_image_base64}"
 
         return context
+ 
+# Chapter: Attendance additional
+class AttendanceScanView(ListView):
+    model = Participant
+    template_name = 'pages/additionals/attendance_scan.html'
+    context_object_name = 'listitems'
+    ordering = ['-attendance_time']
 
-class AttendanceScanView(TemplateView):
-    template_name = 'pages/scan.html'
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(is_approved=True, is_attending=True)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Attendance'
         context['title_action'] = 'Check-In'
         context['subtitle'] = 'Scan QR Participant'
+        context['fields'] = {
+            'organization': 'Organization',
+            'guest_name': 'Guest Name',
+            'invitation': 'Event Invitation',
+        }
         return context
 
-class ParticipantAttendanceView(View):
-    def post(self, request, pk):
-        item = get_object_or_404(Participant, pk=pk)
-        if item.is_attending:
-            item.is_attending = False
-            item.attendance_time = None
-            item.save()
-            messages.success(request, 'Attendance marked as absent successfully.')  # Success message
-        else:
-            item.mark_attendance()
-            messages.success(request, 'Attendance marked successfully.')  # Success message
-        return redirect(self.request.META.get('HTTP_REFERER'))
-
+# Get response from Attendance additional
 @csrf_exempt
 def GetParticipant(request):
     if request.method == 'POST':

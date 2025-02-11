@@ -16,7 +16,7 @@ class Event(models.Model):
     to_event_date = models.DateTimeField(verbose_name="To Event Date*")
     description = models.TextField(blank=True, null=True, verbose_name="Event Description")
     location = models.TextField(verbose_name="Location*")
-    maps_location = models.CharField(max_length=255, null=True, blank=True, verbose_name="Maps location")
+    maps_location = models.CharField(max_length=255, null=True, blank=True, verbose_name="Maps Location URL")
     # event_type = models.CharField(max_length=50)  # e.g., "Wedding", "Conference"
     image = models.ImageField(upload_to='images/', null=True, blank=True)
     deleted_at = models.DateTimeField(null=True, blank=True)

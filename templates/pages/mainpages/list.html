@@ -49,9 +49,15 @@
                                         <button class="btn btn-sm btn-info dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                           Option
                                         </button>
-                                        <ul class="dropdown-menu">
+                                        <ul class="dropdown-menu ">
+                                            <!-- {% if item.li_first %}
                                             <li><button type="button" data-micromodal-trigger="modal-{{ item.text_modal_first }}-{{ item.id }}" class="dropdown-item">{{ item.li_first }}</button></li>
+                                            {% endif %}
+                                            {% if item.li_second %}
                                             <li><button type="button" data-micromodal-trigger="modal-{{ item.text_modal_second }}-{{ item.id }}" class="dropdown-item">{{ item.li_second }}</button></li>
+                                            {% endif %} -->
+                                            {{ item.update_url|safe }}{{ item.additional_url|safe }}{{ item.additional_url_01|safe }}
+                                            {{ item.modal_first|safe }}{{ item.modal_second|safe }}{{ item.modal_third|safe }}
                                         </ul>
                                     </div>
                                 </td>

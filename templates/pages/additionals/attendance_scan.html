@@ -1,6 +1,6 @@
 {% extends 'layouts/base.html' %}
 {% block content %}
-{% load static %}
+{% load static custom_filters %}
 <style>
     /* Menyesuaikan ukuran elemen pembaca QR Code */
 
@@ -38,6 +38,32 @@
                         {% block partial %}
                             {% include 'pages/partials/partial_scan.html' %}
                         {% endblock partial %}
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-5">
+                    <div class="col-xl-12">
+                        <div class="table-responsive">
+                            <table id="table_regular" class="display row-border" style="width:100%">
+                                <thead>
+                                    <tr class="table-secondary">
+                                    <th class="mw-25">No.</th>
+                                    {% for key, value in fields.items %}
+                                        <th>{{ value }}</th>
+                                    {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in listitems %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        {% for field in fields %}
+                                        <td>{{ item|get_field_value:field|safe }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
