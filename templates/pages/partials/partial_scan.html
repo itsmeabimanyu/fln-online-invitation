@@ -1,0 +1,24 @@
+<!-- partial_scan.html -->
+<div>
+    {% if item %}
+        <p class="fs-3">Details</h3>
+        <p class="card-text"><strong>Event:</strong> {{ item.invitation }}</p>
+        <p class="card-text"><strong>Organization:</strong> {{ item.organization }}</p>
+        <p class="card-text"><strong>Name:</strong> {{ item.guest_name }}</p>
+        <p class="card-text"><strong>Email:</strong> {{ item.email }}</p>
+        <p class="card-text"><strong>Is Attending?:</strong> {{ item.is_attending|yesno|capfirst }}</p>
+        {% if not item.is_attending %}
+        <form method="post" action="{% url 'participant_attendance' item.id %}">
+            {% csrf_token %}          
+            <button type="submit" class="btn btn-success">Check-In</button>
+        </form>
+        {% else %}
+        <p class="card-text"><strong>Attendance Time:</strong> {{ item.attendance_time|date:"D, j M Y g:i A"  }}</p>
+        {% endif %}
+        <!-- Add other participant fields here -->
+    {% elif error %}
+        <p class="card-text text-danger">Error: {{ error }}</p>
+    {% else %}
+        <p>No data available.</p>
+    {% endif %}
+</div>

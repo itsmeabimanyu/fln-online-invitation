@@ -15,12 +15,10 @@ urlpatterns = [
     path('participants/delete/<uuid:pk>/', views.ParticipantDeleteView.as_view(), name='participant_delete'),
     path('participants/approve/<uuid:pk>/', views.ParticipantApproveView.as_view(), name='participant_approve'),
     path('participants/attendance/<uuid:pk>/', views.ParticipantAttendanceView.as_view(), name='participant_attendance'),
-
     path('invitation/create/<uuid:pk>/', views.InvitationStyleCreateView.as_view(), name='invitation_create'),
     path('invitation/update/<uuid:pk>/', views.InvitationStyleUpdateView.as_view(), name='invitation_update'),
     path('invitation/<uuid:pk>/', views.InvitationView.as_view(), name='invitation_detail'),
     path('invitation/success/<uuid:pk>/', views.ParticipantSuccessRegisterView.as_view(), name='success_register'),
-
     path('attendance/list/', views.AttendanceListView.as_view(), name='attendance_list'),
     path('attendance/scan/', views.AttendanceScanView.as_view(), name='attendance_scan'),
     path('get-participant/', views.GetParticipant, name='get_participant'),

@@ -1,5 +1,5 @@
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, UpdateView, View, CreateView, DetailView, TemplateView
 from .models import Event, Participant, InvitationStyle
@@ -12,6 +12,11 @@ from django.core.files.base import ContentFile
 from django.contrib import messages
 import qrcode
 import base64
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+from rest_framework.views import APIView
+from django.utils import timezone
 
 # Create your views here.
 '''
@@ -451,10 +456,8 @@ class AttendanceScanView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = 'Attendance'
-        context['title_action'] = 'View'
-        context['text_submit'] = 'Create & View'
+        context['title_action'] = 'Check-In'
         context['subtitle'] = 'Scan QR Participant'
-
         return context
 
 class ParticipantAttendanceView(View):
@@ -464,12 +467,26 @@ class ParticipantAttendanceView(View):
             item.is_attending = False
             item.attendance_time = None
             item.save()
+            messages.success(request, 'Attendance marked as absent successfully.')  # Success message
         else:
             item.mark_attendance()
+            messages.success(request, 'Attendance marked successfully.')  # Success message
         return redirect(self.request.META.get('HTTP_REFERER'))
 
+@csrf_exempt
 def GetParticipant(request):
-    # Memeriksa apakah 'scanned_data' ada dalam query string
-    scanned_data = request.GET.get('scanned_data')
-    print(f"Decoded text: {scanned_data}")
-    # return JsonResponse({"decodedText": decoded_text})
+    if request.method == 'POST':
+        try:
+            # Load the JSON data from the request
+            data = json.loads(request.body)
+            # Extract the 'scanned_data' which is assumed to be the Participant ID
+            scanned_data = data.get('scanned_data')
+            # Get the Participant object based on the scanned_data (assumed to be the ID)
+            guest = get_object_or_404(Participant, id=scanned_data, is_approved=True)
+            # Render the partial template with the participant data
+            return render(request, 'pages/partials/partial_scan.html', {'item': guest})
+        except Exception as e:
+            # Handle any errors
+            return render(request, 'pages/partials/partial_scan.html', {'error': str(e)})
+    # If not a POST request, return some default response or a 404.
+    return render(request, 'pages/partials/partial_scan.html', {'error': 'Invalid request method'})
