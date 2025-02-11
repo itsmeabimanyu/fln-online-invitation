@@ -1,6 +1,12 @@
 {% extends 'layouts/base.html' %}
 {% block content %}
 {% load static custom_filters %}
+<style>
+
+    .expandable:hover .action-buttons {
+        display: block;
+    }
+</style>
 <div class="row mb-2 mb-xl-3">
     <div class="col-auto d-none d-sm-block">
         <h3><strong>{{ title|title }}</strong> {{ title_action|title }}</h3>
@@ -34,6 +40,8 @@
                                 <th>{{ value }}</th>
                             {% endfor %}
                             <th>Action</th>
+
+                            <td>aksi</td>
                             </tr>
                         </thead>
                         <tbody>
@@ -59,6 +67,14 @@
                                             {{ item.update_url|safe }}{{ item.additional_url|safe }}{{ item.additional_url_01|safe }}
                                             {{ item.modal_first|safe }}{{ item.modal_second|safe }}{{ item.modal_third|safe }}
                                         </ul>
+                                    </div>
+                                </td>
+                                <td>
+                                    <button class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#actions1">Aksi</button>
+                                    <div id="actions1" class="collapse mt-2">
+                                        <button class="btn btn-warning w-100 mb-2">Edit</button>
+                                        <button class="btn btn-danger w-100 mb-2">Delete</button>
+                                        <button class="btn btn-secondary w-100 mb-2">Lainnya</button>
                                     </div>
                                 </td>
                             </tr>

@@ -15,7 +15,6 @@ import base64
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from rest_framework.views import APIView
 from django.utils import timezone
 
 # Create your views here.
