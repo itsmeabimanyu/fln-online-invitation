@@ -45,10 +45,11 @@
                                 <td>{{ item|get_field_value:field|safe }}</td>
                                 {% endfor %}
                                 <td>
-                                    <button class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#act-{{ item.id }}">Options </button>
+                                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#act-{{ item.id }}">Options </button>
                                     <div id="act-{{ item.id }}" class="collapse mt-2">
-                                        {{ item.update_url|safe }}{{ item.additional_url|safe }}{{ item.additional_url_01|safe }}
-                                        {{ item.modal_first|safe }}{{ item.modal_second|safe }}{{ item.modal_third|safe }}
+                                        {% for value in item.buttons_action %}
+                                            {{ value|safe  }}
+                                        {% endfor %}
                                     </div>
                                 </td>
                             </tr>

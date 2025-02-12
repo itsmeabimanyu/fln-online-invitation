@@ -36,7 +36,17 @@ class EventForm(forms.ModelForm):
 class ParticipantForm(forms.ModelForm):
     class Meta:
         model = Participant
-        fields = ["organization", "guest_name", "email" ]
+        fields = ["guest_name", "organization", "email" ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            if self.errors.get(field_name):
+                field.widget.attrs.update({'class': 'form-control mt-2 parsley-error'})
+            else:
+                field.widget.attrs.update({'class': 'form-control mt-2'})
+
+            field.widget.attrs.update({'autocomplete': 'off'})
 
 class ParticipantRegisterForm(forms.ModelForm):
     class Meta:

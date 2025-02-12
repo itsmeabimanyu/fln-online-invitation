@@ -80,7 +80,7 @@ class EventListView(ListView):
         context['add_top_button'] = f"<button type='button' class='btn btn-info' onclick='window.location.href=\"{reverse('event_create')}\"'>Create Event</button>"
         context['title_action'] = 'List'
         context['text_submit'] = 'Create & View'
-        context['subtitle'] = 'List View'
+        context['subtitle'] = 'Events'
         context['fields'] = {
             'event_name': 'Event Name',
             'location': 'Location',
@@ -89,18 +89,26 @@ class EventListView(ListView):
             'created_at': 'Created at',
             'is_active': 'Is Active?'
         }
-        for item in context['items']:
-            item.modal_first = f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_active else 'success'} w-100 mb-2'>{'Close' if item.is_active else 'Open'}</button>"
-            item.action_modal_first = reverse('event_close', kwargs={'pk': item.pk})
-            item.title_modal_first = 'Close Event' if item.is_active else 'Open Event'
 
-            item.modal_second = f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-second-{item.id}' class='btn btn-sm btn-danger w-100 mb-2'>Delete</button>"
-            item.action_modal_second = reverse('event_delete', kwargs={'pk': item.pk})
-            item.title_modal_second = 'Delete Event'
-            
-            item.update_url = f"<button type='button' class='btn btn-sm btn-warning w-100 mb-2' onclick='window.location.href=\"{reverse('event_update', args=[item.id])}\"'>Edit</button>"
-            item.additional_url = f"<button type='button' class='btn btn-sm btn-info w-100 mb-2' onclick='window.location.href=\"{reverse('invitation_create', args=[item.id])}\"'>Invitation</button>"
-            item.additional_url_01 = f"<button type='button' class='btn btn-sm btn-info w-100 mb-2' onclick='window.location.href=\"{reverse('participant_create', args=[item.id])}\"'>Participant</button>"
+        # Content table action
+        for item in context['items']:
+            item.buttons_action = [
+                f"<button type='button' class='btn btn-sm btn-info w-100 mb-2' onclick='window.location.href=\"{reverse('invitation_create', args=[item.id])}\"'>Invitation</button>"
+                f"<button type='button' class='btn btn-sm btn-info w-100 mb-2' onclick='window.location.href=\"{reverse('participant_create', args=[item.id])}\"'>Participant</button>"
+                f"<button type='button' class='btn btn-sm btn-warning w-100 mb-2' onclick='window.location.href=\"{reverse('event_update', args=[item.id])}\"'>Edit</button>"
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_active else 'success'} w-100 mb-2'>{'Close' if item.is_active else 'Open'}</button>",
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-second-{item.id}' class='btn btn-sm btn-danger w-100 mb-2'>Delete</button>"
+            ]
+
+            # Content modal
+            item.modals_form = {
+               'Close Event' if item.is_active else 'Open Event': {
+                    f'modal-first-{item.id}': reverse('event_close', kwargs={'pk': item.pk})
+                },
+                'Delete Event': {
+                    f'modal-second-{item.id}': reverse('event_delete', kwargs={'pk': item.pk})
+                }
+            }
 
         return context
     
@@ -186,6 +194,7 @@ class ParticipantCreateView(CreateView):
         return context
 """
 
+"""
 class ParticipantCreateView(CreateView):
     model = Participant
     form_class = ParticipantForm
@@ -249,7 +258,95 @@ class ParticipantCreateView(CreateView):
             )
 
         return redirect(self.request.META.get('HTTP_REFERER'))
+"""
 
+# Chapter: Participant
+class ParticipantCreateView(CreateView, ListView):
+    model = Participant
+    form_class = ParticipantForm
+    template_name = 'pages/create.html'
+    context_object_name = 'items'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.event = get_object_or_404(Event, pk=self.kwargs.get('pk'))
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(invitation=self.event)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "participant"
+        context["title_action"] = " Create"
+        context["subtitle"] = f"Participant: {self.event}"
+        context["active_status"] = '<div class="badge bg-success">Open</div>' if self.event.is_active else '<div class="badge bg-secondary">Close</div>'
+
+        # Content table action
+        for item in context['items']:
+            item.buttons_action = [
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_approved else 'success'} w-100 mb-2'>{'Reject' if item.is_approved else 'Approve'}</button>",
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-second-{item.id}' class='btn btn-sm btn-danger w-100 mb-2'>Delete</button>"
+            ]
+
+            # Content modal
+            item.modals_form = {
+                'Reject Participant' if item.is_approved else 'Approve Participant': {
+                    f'modal-first-{item.id}': reverse('participant_approve', kwargs={'pk': item.pk})
+                },
+                'Delete Participant': {
+                    f'modal-second-{item.id}': reverse('participant_delete', kwargs={'pk': item.pk})
+                }
+            }
+
+        # Content table
+        context["empty_td"] = "<td></td>"
+        context["empty_td_01"] = "<td></td>"
+        context["fields"] = {
+            'guest_name': 'Guest Name',
+            'organization': 'Organization',
+            'email': 'Email',
+            'is_approved': 'Approve?',
+        }
+        return context
+    
+    def form_valid(self, form):
+        # Mendapatkan input data untuk guest_name dan guest_email yang bisa berupa list
+        organizations = self.request.POST.getlist('organization')  # Menangani multiple guest_name
+        guest_names = self.request.POST.getlist('guest_name')  # Menangani multiple guest_name
+        emails = self.request.POST.getlist('email')  # Menangani multiple guest_email
+
+        # Pastikan jumlah guest_name dan guest_email cocok
+        '''
+        if len(guest_names):
+            for name, email, organization in zip(guest_names, guest_emails, organizations):
+                # Membuat Participant baru untuk setiap pasangan name dan email
+                Participant.objects.create(
+                    # organization=form.cleaned_data['organization'],
+                    invitation=self.event,
+                    organization=organization,
+                    guest_name=name,
+                    guest_email=email
+                )
+        else:
+            # Jika jumlah guest_name dan guest_email tidak cocok
+            form.add_error('guest_name', 'Jumlah guest_name dan guest_email tidak cocok.')
+
+            # Mengembalikan response jika ada error
+            return self.form_invalid(form)
+        '''
+        for name, email, organization in zip(guest_names, emails, organizations):
+            # Membuat Participant baru untuk setiap pasangan name dan email
+            Participant.objects.create(
+                # organization=form.cleaned_data['organization'],
+                invitation=self.event,
+                organization=organization,
+                guest_name=name,
+                email=email
+            )
+
+        return redirect(self.request.META.get('HTTP_REFERER'))
+    
 class ParticipantDeleteView(View):
     def post(self, request, pk):
         item = get_object_or_404(Participant, pk=pk)
@@ -482,13 +579,24 @@ class AttendanceListView(ListView):
             'is_attending': 'Attendance?',
         }
 
+        # Content table action
         for item in context['items']:
-            item.modal_first = f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_attending else 'success'} w-100 mb-2'>{'Not Attend' if item.is_attending else 'Attend'}</button>"
-            item.action_modal_first = reverse('participant_attendance', kwargs={'pk': item.pk})
-            item.title_modal_first = 'Mark as Absent' if item.is_attending else 'Mark as Present'
+            item.buttons_action = [
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_attending else 'success'} w-100 mb-2'>{'Not Attend' if item.is_attending else 'Attend'}</button>",
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-third-{item.id}' class='btn btn-sm btn-info w-100'>Detail</button>"
+            ]
 
-            item.modal_third = f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-third-{item.id}' class='btn btn-sm btn-info w-100'>Detail</button>"
-            item.text_modal_third = 'Details Participant'
+            # Content modal
+            item.modals_form = {
+                'Mark as Absent' if item.is_attending else 'Mark as Present': {
+                    f'modal-first-{item.id}': reverse('participant_attendance', kwargs={'pk': item.pk})
+                },
+            }
+            item.modals_detail = {
+                'Details Participant': {
+                    f'modal-third-{item.id}': ''
+                },
+            }
 
             # Create a QR code
             qr = qrcode.make(item.id)
@@ -551,7 +659,12 @@ class EventDashboardView(ListView):
     model = Event
     template_name = 'dashboards/events.html'
     context_object_name = 'items'
+    ordering = ['from_event_date']
     paginate_by = 4
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(deleted_at__isnull=True)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
