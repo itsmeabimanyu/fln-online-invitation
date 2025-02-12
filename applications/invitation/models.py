@@ -18,7 +18,7 @@ class Event(models.Model):
     location = models.TextField(verbose_name="Location*")
     maps_location = models.CharField(max_length=255, null=True, blank=True, verbose_name="Maps Location URL")
     # event_type = models.CharField(max_length=50)  # e.g., "Wedding", "Conference"
-    image = models.ImageField(upload_to='images/', null=True, blank=True)
+    image = models.ImageField(upload_to='images/', null=True, blank=True, verbose_name="Event Cover Image")
     deleted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     is_active = models.BooleanField(default=True)
@@ -30,7 +30,6 @@ class Event(models.Model):
         # Check if 'to_event_date' is earlier than 'from_event_date'
         if self.to_event_date < self.from_event_date:
             raise ValidationError("The 'To Event Date' cannot be earlier than the 'From Event Date'.")
-            messages.success(self.request, 'Thank you for your response! You will now wait for a response from us.')
     
     def soft_delete(self):
         self.deleted_at = timezone.now()  # Set waktu penghapusan
@@ -139,4 +138,5 @@ class InvitationStyle(models.Model):
     appreciation_text = models.CharField(max_length=255, null=True, blank=True, verbose_name="Appreciation Text")
     # set_as_background = models.BooleanField(default=False, verbose_name="Set as Background Image?")
     enable_dark_mode = models.BooleanField(default=False, verbose_name="Enable Dark Mode?")
+    show_map_qrcode_on_invitation = models.BooleanField(default=True, verbose_name="Show Maps QR Code on Invitation?")
     

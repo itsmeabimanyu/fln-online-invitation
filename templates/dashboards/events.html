@@ -1,0 +1,57 @@
+{% extends 'layouts/base.html' %}
+{% block content %}
+{% load static custom_filters %}
+<div class="row mb-2 mb-xl-3">
+    <div class="col-auto d-none d-sm-block">
+        <h3><strong>{{ title|title }}</strong> {{ title_action|title }}</h3>
+    </div>
+    <div class="col-auto ms-auto text-end mt-n1">
+        {{ add_top_button|safe }}
+    </div>
+</div>
+
+<div class="row">
+{% for item in items %}
+    <div class="col-12 col-xs-12 col-sm-12 col-md-6 col-lg-4 col-xl-3 d-flex">
+        <div class="card mb-4 border {% if not item.is_active %}bg-secondary bg-opacity-50{% endif %}">
+            <div class="card-img-container">
+                <img src="{{ item.card_image }}" class="card-img-top {% if not item.is_active %}opacity-25{% endif %}" alt="Card image">
+                {{ item.card_text_status|safe }}
+            </div>
+            <div class="card-header border-top px-4 pt-4 {% if not item.is_active %}bg-secondary bg-opacity-50{% endif %}">
+                
+                <div class="card-actions float-end">
+                    <!-- Dropdown di sebelah kanan -->
+                    <div class="dropdown position-relative">
+                        <a href="#" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="true" class="show">
+                            <i class="align-middle" data-feather="more-horizontal"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end" data-bs-popper="static">
+                            {{ item.additional_url|safe }}{{ item.additional_url_01|safe }}
+                        </div>
+                    </div>
+                </div>
+                
+                <p class="fs-3"><strong>{{ item.card_title }}</strong></p>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if item.card_subtitle %}<p>{{ item.card_subtitle|slice:"100" }}</p>{% endif %}
+                    {% for key, value in fields.items %}
+                    {{ value|safe }}
+                    <p class="fw-bolder ms-4">{{ item|get_field_value:key|safe }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card-footer {% if not item.is_active  %}bg-secondary bg-opacity-25{% endif %}">
+                <div class="card-actions d-flex align-items-center justify-content-between w-100">
+                    <!-- Badge di sebelah kiri -->
+                    {{ item.card_badge|safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+</div>
+
+{% endblock content %}

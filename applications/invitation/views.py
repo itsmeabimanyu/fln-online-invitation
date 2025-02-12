@@ -16,9 +16,11 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.utils import timezone
+from django.templatetags.static import static
+from django.http import Http404
+
 
 # Create your views here.
-
 # Chapter: Event 
 class EventCreateView(CreateView):
     model = Event
@@ -70,7 +72,7 @@ class EventListView(ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        return queryset.filter(deleted_at__isnull=True).order_by('-is_active', 'from_event_date')
+        return queryset.filter(deleted_at__isnull=True).order_by('-is_active', 'created_at', 'from_event_date')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -84,20 +86,21 @@ class EventListView(ListView):
             'location': 'Location',
             'from_event_date': 'From Date',
             'to_event_date': 'To Date',
+            'created_at': 'Created at',
             'is_active': 'Is Active?'
         }
         for item in context['items']:
-            item.modal_first = f"<li><button type='button' data-micromodal-trigger='modal-first-{item.id}' class='dropdown-item text-danger'>Delete</button></li>"
-            item.action_modal_first = reverse('event_delete', kwargs={'pk': item.pk})
-            item.title_modal_first = 'Delete'
+            item.modal_first = f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_active else 'success'} w-100 mb-2'>{'Close' if item.is_active else 'Open'}</button>"
+            item.action_modal_first = reverse('event_close', kwargs={'pk': item.pk})
+            item.title_modal_first = 'Close Event' if item.is_active else 'Open Event'
 
-            item.modal_second = f"<li><button type='button' data-micromodal-trigger='modal-second-{item.id}' class='dropdown-item'>{'Close Event' if item.is_active else 'Open Event'}</button></li>"
-            item.action_modal_second = reverse('event_close', kwargs={'pk': item.pk})
-            item.title_modal_second = 'Close Event' if item.is_active else 'Open Event'
+            item.modal_second = f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-second-{item.id}' class='btn btn-sm btn-danger w-100 mb-2'>Delete</button>"
+            item.action_modal_second = reverse('event_delete', kwargs={'pk': item.pk})
+            item.title_modal_second = 'Delete Event'
             
-            item.update_url = f"<li><button type='button' class='dropdown-item' onclick='window.location.href=\"{reverse('event_update', args=[item.id])}\"'>Edit</button></li>"
-            item.additional_url = f"<li><button type='button' class='dropdown-item' onclick='window.location.href=\"{reverse('invitation_create', args=[item.id])}\"'>Invitation</button></li>"
-            item.additional_url_01 = f"<li><button type='button' class='dropdown-item' onclick='window.location.href=\"{reverse('participant_create', args=[item.id])}\"'>Participant</button></li>"
+            item.update_url = f"<button type='button' class='btn btn-sm btn-warning w-100 mb-2' onclick='window.location.href=\"{reverse('event_update', args=[item.id])}\"'>Edit</button>"
+            item.additional_url = f"<button type='button' class='btn btn-sm btn-info w-100 mb-2' onclick='window.location.href=\"{reverse('invitation_create', args=[item.id])}\"'>Invitation</button>"
+            item.additional_url_01 = f"<button type='button' class='btn btn-sm btn-info w-100 mb-2' onclick='window.location.href=\"{reverse('participant_create', args=[item.id])}\"'>Participant</button>"
 
         return context
     
@@ -286,7 +289,7 @@ class InvitationStyleCreateView(CreateView):
 
     def dispatch(self, request, *args, **kwargs):
         # Get the event using the 'pk' from the URL kwargs
-        self.event = get_object_or_404(Event, pk=self.kwargs.get('pk'))
+        self.event = get_object_or_404(Event, pk=self.kwargs.get('pk'), is_active=True, deleted_at__isnull=True)
 
         # Check if the InvitationStyle already exists for the event
         try:
@@ -306,7 +309,7 @@ class InvitationStyleCreateView(CreateView):
         context["title_action"] = "create"
         context["subtitle"] = f'Create: {get_object_or_404(Event, id=self.event.id)}'
         context["text_submit"] = "Create & View"
-        context["active_status"] = self.event.is_active
+        context["active_status"] = '<div class="badge bg-success">Open</div>' if self.event.is_active else '<div class="badge bg-secondary">Close</div>'
         return context
     
     def form_valid(self, form):
@@ -321,13 +324,25 @@ class InvitationStyleUpdateView(UpdateView):
     template_name = 'pages/mainpages/create.html'
     context_object_name = 'item'
 
+    def dispatch(self, request, *args, **kwargs):
+        # Ambil object yang ingin diupdate
+        item = self.get_object()
+
+        # Periksa apakah 'deleted_at' pada relasi 'event' adalah null atau 'event' tidak aktif
+        if item.event.deleted_at is not None or not item.event.is_active:
+            # Jika deleted_at tidak null atau event tidak aktif, berarti objek ini sudah dihapus
+            raise Http404("This invitation style's related event has been deleted or is inactive and cannot be updated.")
+
+        # Jika passed, lanjutkan dengan proses UpdateView biasa
+        return super().dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "invitation"
         context["title_action"] = "update"
         context["subtitle"] = f'Update: {self.object.event.event_name}'
         context["text_submit"] = "Update & View"
-        context["active_status"] = self.object.event.is_active
+        context["active_status"] = '<div class="badge bg-success">Open</div>' if self.object.event.is_active else '<div class="badge bg-secondary">Close</div>'
         context["additional_button"] = f"<button type='button' class='btn btn-primary' onclick='window.location.href=\"{reverse('invitation_detail', args=[self.object.event.id])}\"'>View</button>"
         return context
 
@@ -450,7 +465,7 @@ class AttendanceListView(ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        return queryset.filter(is_approved=True)
+        return queryset.filter(is_approved=True, invitation__is_active=True)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -468,12 +483,12 @@ class AttendanceListView(ListView):
         }
 
         for item in context['items']:
-            item.modal_first = f"<li><button type='button' data-micromodal-trigger='modal-first-{item.id}' class='dropdown-item'>{'Mark not attending ' if item.is_attending else 'Mark attending'}</button></li>"
+            item.modal_first = f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_attending else 'success'} w-100 mb-2'>{'Not Attend' if item.is_attending else 'Attend'}</button>"
             item.action_modal_first = reverse('participant_attendance', kwargs={'pk': item.pk})
-            item.title_modal_first = 'Attendance'
+            item.title_modal_first = 'Mark as Absent' if item.is_attending else 'Mark as Present'
 
-            item.modal_third = f"<li><button type='button' data-micromodal-trigger='modal-third-{item.id}' class='dropdown-item'>Detail</button></li>"
-            item.text_modal_third = 'Details'
+            item.modal_third = f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-third-{item.id}' class='btn btn-sm btn-info w-100'>Detail</button>"
+            item.text_modal_third = 'Details Participant'
 
             # Create a QR code
             qr = qrcode.make(item.id)
@@ -492,12 +507,12 @@ class AttendanceListView(ListView):
 class AttendanceScanView(ListView):
     model = Participant
     template_name = 'pages/additionals/attendance_scan.html'
-    context_object_name = 'listitems'
+    context_object_name = 'items'
     ordering = ['-attendance_time']
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        return queryset.filter(is_approved=True, is_attending=True)
+        return queryset.filter(is_approved=True, is_attending=True, invitation__is_active=True)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -508,6 +523,7 @@ class AttendanceScanView(ListView):
             'organization': 'Organization',
             'guest_name': 'Guest Name',
             'invitation': 'Event Invitation',
+            'attendance_time': 'Attendance Time',
         }
         return context
 
@@ -521,7 +537,7 @@ def GetParticipant(request):
             # Extract the 'scanned_data' which is assumed to be the Participant ID
             scanned_data = data.get('scanned_data')
             # Get the Participant object based on the scanned_data (assumed to be the ID)
-            guest = get_object_or_404(Participant, id=scanned_data, is_approved=True)
+            guest = get_object_or_404(Participant, id=scanned_data, is_approved=True, invitation__is_active=True)
             # Render the partial template with the participant data
             return render(request, 'pages/partials/partial_scan.html', {'item': guest})
         except Exception as e:
@@ -529,3 +545,31 @@ def GetParticipant(request):
             return render(request, 'pages/partials/partial_scan.html', {'error': str(e)})
     # If not a POST request, return some default response or a 404.
     return render(request, 'pages/partials/partial_scan.html', {'error': 'Invalid request method'})
+
+# Chapter: Dasboard
+class EventDashboardView(ListView):
+    model = Event
+    template_name = 'dashboards/events.html'
+    context_object_name = 'items'
+    paginate_by = 4
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Events'
+        context['title_action'] = 'Dashboard'
+        context['add_top_button'] = f"<button type='button' class='btn btn-info' onclick='window.location.href=\"{reverse('event_create')}\"'>Create Event</button>"
+        context['fields'] = {
+            'from_event_date': '<p class="card-text"><i class="align-middle me-2" data-feather="calendar"></i>From Date Time</p>',
+            'to_event_date': '<p class="card-text"><i class="align-middle me-2" data-feather="calendar"></i>To Date Time</p>',
+            'location': '<p class="card-text"><i class="align-middle me-2" data-feather="map-pin"></i>Location</p>',
+        }
+        for item in context['items']:
+            item.card_image = item.image.url if item.image else static('images/default_1280_720.jpg')
+            item.card_text_status = '' if item.is_active else '<p class="fs-2 text-overlay text-light">CLOSED</p>'
+            item.card_title = item.event_name
+            item.card_subtitle = item.description
+            item.card_badge = '<span class="badge bg-success">Open</span>' if item.is_active else '<span class="badge bg-secondary">Close</span>'
+            item.additional_url = f"<button type='button' class='dropdown-item' onclick='window.location.href=\"{reverse('invitation_create', args=[item.id])}\"'>Invitation</button>"
+            item.additional_url_01 = f"<button type='button' class='dropdown-item' onclick='window.location.href=\"{reverse('participant_create', args=[item.id])}\"'>Participant</button>"
+
+        return context

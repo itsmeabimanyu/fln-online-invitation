@@ -18,14 +18,17 @@
                 <div class="card-actions float-end">
                 </div>
                 <p class="fs-3">{{ subtitle }}</p>
-                {% if active_status %}<div class="badge {% if active_status %}bg-success{% else %}bg-danger{% endif %} my-2">
-                    {% if active_status %}Active{% else %}Inactive{% endif %}
-                </div>{% endif %}
+                {{ active_status|safe }}
             </div>
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="card-body">
                 {{ form.as_p }}  <!-- This will render the form fields with labels and inputs -->
+                {% if item.image %}
+                <img id="preview" src="{{ item.image.url }}" class="card-img-top border rounded w-25" alt="Image of {{ item.name }}">
+                {% else %}
+                <img id="preview" src="{% static 'images/default_1280_720.jpg' %}" class="card-img-top border rounded w-25" alt="Default image">
+                {% endif %}
                 </div>
                 <div class="card-footer">
                     <button type="submit" class="btn btn-success">{{ text_submit }}</button>

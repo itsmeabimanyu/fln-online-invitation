@@ -9,12 +9,12 @@ from .models import Event, Participant, InvitationStyle
 class EventForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ["event_name", "description", "location", "maps_location", "from_event_date", "to_event_date", "image" ]
+        fields = ["event_name", "description", "location", "maps_location", "from_event_date", "to_event_date", "image"]
         widgets = {
-            # 'image': forms.ClearableFileInput(attrs={
-            #    'id': 'imageInput',  # ID untuk input gambar
-            #    'onchange': 'previewImage(event)',  # Menambahkan event onchange
-            # }),
+            'image': forms.ClearableFileInput(attrs={
+                'id': 'imageInput',  # ID untuk input gambar
+                'onchange': 'previewImage(event)',  # Menambahkan event onchange
+            }),
             'maps_location': forms.TextInput(attrs={'placeholder': 'Enter link to maps location'}),
             'location': forms.TextInput(attrs={'placeholder': 'Enter event location'}),
             'event_name': forms.TextInput(attrs={'placeholder': 'Enter event name'}),
@@ -22,7 +22,6 @@ class EventForm(forms.ModelForm):
             'from_event_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'to_event_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
         }
-        
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -85,12 +84,19 @@ class InvitationStyleForm(forms.ModelForm):
         fields = [
             'greeting_title', 
             'greeting_description', 
-            'image', 
+            'image',
             'appreciation_image', 
             'appreciation_text', 
             # 'set_as_background', 
-            'enable_dark_mode'
+            'enable_dark_mode',
+            'show_map_qrcode_on_invitation'
         ]
+        widgets = {
+            'image': forms.ClearableFileInput(attrs={
+                'id': 'imageInput',  # ID untuk input gambar
+                'onchange': 'previewImage(event)',  # Menambahkan event onchange
+            }),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -100,7 +106,7 @@ class InvitationStyleForm(forms.ModelForm):
             else:
                 field.widget.attrs.update({'class': 'form-control mt-2'})
 
-            if field_name in ['enable_dark_mode']:
+            if field_name in ['enable_dark_mode', 'show_map_qrcode_on_invitation']:
                 field.widget.attrs.update({'class': 'form-check mt-2 form-check-input'})
 
             field.widget.attrs.update({'autocomplete': 'off'})

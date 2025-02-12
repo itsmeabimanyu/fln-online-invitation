@@ -91,86 +91,77 @@
 {% endcomment %}
 
 
-
 {% for item in items %}
-<!-- Modal untuk first action -->
-<div class="modal micromodal-slide" id="modal-first-{{ item.id }}" aria-hidden="true">
-    <div class="modal__overlay" tabindex="-1" data-micromodal-close>
-        <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-first-{{ item.id }}-title">
-            <!-- Header Modal -->
-            <header class="modal__header">
-                <h2 class="modal__title" id="modal-first-{{ item.id }}-title">
-                    {{ item.title_modal_first|title }}
-                </h2>
-                <button class="modal__close" aria-label="Tutup modal" data-micromodal-close></button>
-            </header>
-            <!-- Konten Modal -->
-            <main class="modal__content" id="modal-{{ item.item.id }}-content">
-                <p>Are you sure you want to <strong>{{ item.title_modal_first|lower }}</strong> "{{ item }}"?</p>
-                <!-- Form untuk menghapus item -->
-                <form method="post" action="{{ item.action_modal_first }}">
-                    {% csrf_token %}
-                    <div class="modal__footer">
-                        <button type="button" class="btn btn-secondary" data-micromodal-close>Cancel</button>
-                        <button type="submit" class="btn btn-success">{{ item.title_modal_first }}</button>
-                    </div>
-                </form>
-            </main>
+<!-- Modal first submit form -->
+<div class="modal fade" id="modal-first-{{ item.id }}" tabindex="-1" aria-labelledby="modal-first-{{ item.id }}-title" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{{ item.action_modal_first }}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <p class="fs-4 modal-title" id="modal-first-{{ item.id }}-title">{{ item.title_modal_first }}</p>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="fs-4">Are you sure you want to {{ item.title_modal_first|lower }}?<br><strong>{{ item }}</strong></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success">{{ item.title_modal_first }}</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 {% endfor %}
 
 {% for item in items %}
-<!-- Modal untuk second action -->
-<div class="modal micromodal-slide" id="modal-second-{{ item.id }}" aria-hidden="true">
-    <div class="modal__overlay" tabindex="-1" data-micromodal-close>
-        <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-second-{{ item.id }}-title">
-            <!-- Header Modal -->
-            <header class="modal__header">
-                <h2 class="modal__title" id="modal-second-{{ item.id }}-title">
-                    {{ item.title_modal_second }}
-                </h2>
-                <button class="modal__close" aria-label="Tutup modal" data-micromodal-close></button>
-            </header>
-            <!-- Konten Modal -->
-            <main class="modal__content" id="modal-{{ item.item.id }}-content">
-                <p>Are you sure you want to <strong>{{ item.title_modal_second|lower }}</strong> "{{ item }}"?</p>
-                <!-- Form untuk menghapus item -->
-                <form method="post" action="{{ item.action_modal_second }}">
-                    {% csrf_token %}
-                    <div class="modal__footer">
-                        <button type="button" class="btn btn-secondary" data-micromodal-close>Cancel</button>
-                        <button type="submit" class="btn btn-success">{{ item.title_modal_second }}</button>
-                    </div>
-                </form>
-            </main>
+<!-- Modal second submit form -->
+<div class="modal fade" id="modal-second-{{ item.id }}" tabindex="-1" aria-labelledby="modal-second-{{ item.id }}-title" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{{ item.action_modal_second }}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <p class="fs-4 modal-title" id="modal-second-{{ item.id }}-title">{{ item.title_modal_second }}</p>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="fs-4">Are you sure you want to {{ item.title_modal_second|lower }}?<br><strong>{{ item }}</strong></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success">{{ item.title_modal_second }}</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 {% endfor %}
 
 {% for item in items %}
-<!-- Modal untuk third item (detail) -->
-<div class="modal micromodal-slide" id="modal-third-{{ item.id }}" aria-hidden="true">
-    <div class="modal__overlay" tabindex="-1" data-micromodal-close>
-        <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="modal-third-{{ item.id }}-title">
-            <!-- Header Modal -->
-            <header class="modal__header">
-                <h2 class="modal__title" id="modal-third-{{ item.id }}-title">
-                    {{ item.text_modal_third }}
-                </h2>
-                <button class="modal__close" aria-label="Tutup modal" data-micromodal-close></button>
-            </header>
-            <!-- Konten Modal -->
-            <main class="modal__content" id="modal-{{ item.item.id }}-content">
-                {% for field, value in fields.items %}
-                <p>{{ value }}: {{ item|get_field_value:field|safe }}</p>
-                {% endfor %}
-                {% if item.qr_image %}<img src="{{ item.qr_image }}" alt="QR Code" class="w-50">{% endif %}
-            </main>
-            <div class="modal__footer">
-                <button type="button" class="btn btn-secondary" data-micromodal-close>Close</button>
+<!-- Modal third detail -->
+<div class="modal fade" id="modal-third-{{ item.id }}" tabindex="-1" aria-labelledby="modal-third-{{ item.id }}-title" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <p class="fs-4 modal-title" id="modal-third-{{ item.id }}-title">{{ item.text_modal_third }}</p>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-xl-8">
+                        {% for field, value in fields.items %}
+                        <p class="fs-5">{{ value }}: <strong>{{ item|get_field_value:field|safe }}</strong></p>
+                        {% endfor %}
+                    </div>
+                    <div class="col-xl-4">
+                        {% if item.qr_image %}<img src="{{ item.qr_image }}" alt="QR Code" class="w-75">{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
