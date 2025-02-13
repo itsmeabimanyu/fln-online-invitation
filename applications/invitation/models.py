@@ -7,8 +7,18 @@ from django.core.files.base import ContentFile
 import io
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.exceptions import ValidationError
+import string
+import random
+from django.contrib.auth import get_user_model
 
-# Event Model - As before, representing an event to which people or companies are invited
+User = get_user_model() 
+
+def generate_short_code():
+    """Membuat kode pendek acak sepanjang 6 karakter."""
+    length = 6
+    characters = string.ascii_letters + string.digits  # A-Z, a-z, 0-9
+    return ''.join(random.choice(characters) for _ in range(length))
+
 class Event(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     event_name = models.CharField(max_length=255, verbose_name="Event Name*")
@@ -22,6 +32,8 @@ class Event(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     is_active = models.BooleanField(default=True)
+    short_link = models.CharField(max_length=10, unique=True, verbose_name="Short Link")
+    submitter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_invitations')
 
     def __str__(self):
         return self.event_name
@@ -30,6 +42,10 @@ class Event(models.Model):
         # Check if 'to_event_date' is earlier than 'from_event_date'
         if self.to_event_date < self.from_event_date:
             raise ValidationError("The 'To Event Date' cannot be earlier than the 'From Event Date'.")
+        
+        # Generate short_link jika belum ada
+        if not self.short_link:
+            self.short_link = generate_short_code()
     
     def soft_delete(self):
         self.deleted_at = timezone.now()  # Set waktu penghapusan
@@ -83,20 +99,6 @@ class Event(models.Model):
             
         super().save(*args, **kwargs)
 
-"""
-class Organization(models.Model):
-    # Informasi instansi
-    name = models.CharField(max_length=255, verbose_name="Nama Instansi")
-    address = models.TextField(blank=True, null=True, verbose_name="Alamat Instansi")
-    email = models.EmailField(validators=[EmailValidator()], blank=True, null=True, verbose_name="Email Instansi")
-    phone_number = models.CharField(max_length=20, blank=True, null=True, verbose_name="Nomor Telepon Instansi")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Dibuat Pada")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Diperbarui Pada")
-
-    def __str__(self):
-        return self.name
-"""
-
 class Participant(models.Model):
     # Informasi tamu
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -112,6 +114,7 @@ class Participant(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Dibuat Pada")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Diperbarui Pada")
     is_approved = models.BooleanField(default=False, verbose_name="Approve?")
+    approved_by =  models.ForeignKey(User, on_delete=models.CASCADE, related_name='approved_by')
 
     def __str__(self):
         return f"{self.guest_name}"

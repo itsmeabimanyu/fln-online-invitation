@@ -55,12 +55,16 @@
                                 </tr>
                                 {% endfor %}
                                 <tr>
-                                    {{ empty_td|safe }}
+                                    {% for value in first_add_td %}
+                                        {{ value|safe }}
+                                    {% endfor %}
                                     <td>{{items|length|add:1}}</td>
                                     {% for field in form %}
                                         <td>{{ field }}</td>
                                     {% endfor %}
-                                    {{ empty_td_01|safe }}
+                                    {% for value in last_add_td %}
+                                        {{ value|safe }}
+                                    {% endfor %}
                                     <td><button class="btn btn-danger btn-sm deleteRow"><i data-feather="trash-2"></i></button></td> 
                                 </tr>
                                 <!-- More rows can be added here -->
@@ -103,7 +107,9 @@
         $('#addRow').on('click', function() {
             // Membuat array untuk menyimpan data baris baru
             var newRow = [
-                '{{ empty_td|escapejs }}',  // Checkbox di kolom pertama
+                {% for value in first_add_td_js %}
+                '{{ value|escapejs }}',  // Checkbox di kolom pertama
+                {% endfor %}
                 table.rows().count() + 1,  // Nomor urut otomatis berdasarkan jumlah baris
             ];
         
@@ -112,8 +118,10 @@
                 newRow.push('{{ field }}');
             {% endfor %}
 
-            // Menambahkan kolom kosong kedua
-            {% if empty_td_01 %}newRow.push('{{ empty_td_01|escapejs }}');{% endif %}  // Kolom kosong kedua
+            // Menambahkan kolom kosong
+            {% for td in last_add_td %}
+                newRow.push('{{ td|escapejs }}');
+            {% endfor %}
         
             // Menambahkan tombol delete
             newRow.push('<button class="btn btn-danger btn-sm deleteRow"><i data-feather="trash-2"></i></button>');

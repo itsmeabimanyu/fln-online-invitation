@@ -32,4 +32,7 @@ urlpatterns = [
     # Chapter: Login/Logout
     path('login/', views.LoginView.as_view(), name='login'),
     path('logout/', views.LogoutView.as_view(), name='logout'),
+
+    # Short link
+    path('<str:shortcode>/', views.redirect_shortlink, name='redirect_shortlink'),
 ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

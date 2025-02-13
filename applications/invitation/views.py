@@ -1,10 +1,8 @@
-import os
-import qrcode
-import base64
-import json
-import ldap
+import os, base64, json, qrcode, ldap
+from io import BytesIO
+from PIL import Image
 
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, UpdateView, View, CreateView, DetailView, TemplateView
@@ -13,7 +11,6 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from django.templatetags.static import static
-from django.http import Http404
 from django.contrib.auth.views import LoginView
 from django_auth_ldap.backend import LDAPBackend
 from django.contrib.auth import login, authenticate
@@ -22,10 +19,12 @@ from django.conf import settings
 
 from .models import Event, Participant, InvitationStyle
 from .forms import EventForm, ParticipantForm, ParticipantRegisterForm, InvitationStyleForm, CustomLoginForm
-from PIL import Image
-from io import BytesIO
 
 # Create your views here.
+def redirect_shortlink(request, shortcode):
+    shortlink = get_object_or_404(Event, short_link=shortcode, deleted_at__isnull=True, is_active=True)
+    return redirect(reverse_lazy('invitation_detail', kwargs={'pk': shortlink.id}))
+
 # Chapter: Event 
 class EventCreateView(LoginRequiredMixin, CreateView):
     model = Event
@@ -45,6 +44,7 @@ class EventCreateView(LoginRequiredMixin, CreateView):
         return context
     
     def form_valid(self, form):
+        form.instance.submitter = self.request.user
         messages.success(self.request, 'Event created successfully!')
         return super().form_valid(form)
 
@@ -92,6 +92,7 @@ class EventListView(LoginRequiredMixin, ListView):
             'from_event_date': 'From Date',
             'to_event_date': 'To Date',
             'created_at': 'Created at',
+            'submitter': 'User',
             'is_active': 'Is Active?'
         }
 
@@ -136,14 +137,14 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
         return context
     
     def form_valid(self, form):
-        obj = self.get_object()  # Ambil objek lama
-        if 'image' in form.changed_data:  # Cek apakah gambar diubah
-            if obj.image: 
-                old_image_path = obj.image.path  
-                if os.path.exists(old_image_path):
-                    os.remove(old_image_path)  # Hapus gambar lama
+        form.instance.submitter = self.request.user
+        if 'image' in form.changed_data:  # Pastikan gambar diubah
+            old_image_path = self.get_object().image.path
+            if os.path.exists(old_image_path):
+                os.remove(old_image_path)
         messages.success(self.request, 'Event updated successfully!')
         return super().form_valid(form)
+
     
 class SoftDeleteEventView(LoginRequiredMixin, View):
     def post(self, request, pk):
@@ -305,13 +306,25 @@ class ParticipantCreateView(LoginRequiredMixin, CreateView, ListView):
             }
 
         # Content table
-        context["empty_td"] = "<td></td>"
-        context["empty_td_01"] = "<td></td>"
+        context["first_add_td"] = [
+            '<td></td>',
+        ]
+
+        context["first_add_td_js"] = [
+            '',
+        ]
+
+        context["last_add_td"] = [
+            '<td> </td>',
+            '<td> </td>'
+        ]
+
         context["fields"] = {
             'guest_name': 'Guest Name',
             'organization': 'Organization',
             'email': 'Email',
             'is_approved': 'Approve?',
+            'approved_by': 'Approved by'
         }
         return context
     
@@ -364,8 +377,10 @@ class ParticipantApproveView(LoginRequiredMixin, View):
 
         if item.is_approved:
             item.is_approved = False
+            item.approved_by = None
             item.save()
         else:
+            item.approved_by = self.request.user
             item.approve_participant()      
 
         return redirect(self.request.META.get('HTTP_REFERER'))
@@ -462,7 +477,7 @@ class InvitationView(CreateView):
     context_object_name = 'item'
 
     def dispatch(self, request, *args, **kwargs):
-        self.event = get_object_or_404(Event, pk=self.kwargs.get('pk'))
+        self.event = get_object_or_404(Event, pk=self.kwargs.get('pk'), deleted_at__isnull=True, is_active=True)
         return super().dispatch(request, *args, **kwargs)
     
     def form_valid(self, form):
@@ -662,7 +677,7 @@ def GetParticipant(request):
 # Chapter: Dasboard
 class EventDashboardView(LoginRequiredMixin, ListView):
     model = Event
-    template_name = 'dashboards/events.html'
+    template_name = 'pages/dashboards/events.html'
     context_object_name = 'items'
     ordering = ['-is_active', 'from_event_date']
     paginate_by = 4

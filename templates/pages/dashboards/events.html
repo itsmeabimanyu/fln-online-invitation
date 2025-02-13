@@ -19,7 +19,7 @@
                 {{ item.card_text_status|safe }}
             </div>
             <div class="card-header border-top px-4 pt-4 {% if not item.is_active %}bg-secondary bg-opacity-50{% endif %}">
-                
+                {% if item.is_active%}
                 <div class="card-actions float-end">
                     <!-- Dropdown di sebelah kanan -->
                     <div class="dropdown position-relative">
@@ -31,7 +31,7 @@
                         </div>
                     </div>
                 </div>
-                
+                {% endif %}
                 <p class="fs-3"><strong>{{ item.card_title }}</strong></p>
             </div>
             <div class="card-body">
