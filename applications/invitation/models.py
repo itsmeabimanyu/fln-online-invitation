@@ -27,7 +27,6 @@ class Event(models.Model):
     description = models.TextField(blank=True, null=True, verbose_name="Event Description")
     location = models.TextField(verbose_name="Location*")
     maps_location = models.CharField(max_length=255, null=True, blank=True, verbose_name="Maps Location URL")
-    # event_type = models.CharField(max_length=50)  # e.g., "Wedding", "Conference"
     image = models.ImageField(upload_to='images/', null=True, blank=True, verbose_name="Event Cover Image")
     deleted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
@@ -114,7 +113,7 @@ class Participant(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Dibuat Pada")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Diperbarui Pada")
     is_approved = models.BooleanField(default=False, verbose_name="Approve?")
-    approved_by =  models.ForeignKey(User, on_delete=models.CASCADE, related_name='approved_by')
+    approved_by =  models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name='approved_by')
 
     def __str__(self):
         return f"{self.guest_name}"

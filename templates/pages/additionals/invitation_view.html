@@ -52,7 +52,9 @@
     <p class="card-text text-center"><i class="align-middle me-2" data-feather="map-pin"></i>Location</p>
     <div class="col-12">
         <p class="text-md text-center"><strong>{{ item.event.location|title }}</strong></p>
-        <p class="text-center"><a class="link-offset-2 link-underline link-underline-opacity-0" href="{{ item.event.maps_location }}">Show Maps</a></p>
+        {% if item.event.maps_location %}
+            <p class="text-center"><a class="link-offset-2 link-underline link-underline-opacity-0" href="{{ item.event.maps_location }}">Show Maps</a></p>
+        {% endif %}
     </div>
 </div>
 {% endif %}

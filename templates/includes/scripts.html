@@ -79,6 +79,14 @@
     }
 </script>
 
+<!-- Preloader -->
+<script>
+    $(window).on('load', function() {
+        $('#loading').fadeOut('slow', function() {
+            $('#layoutSidenav').fadeIn('slow');
+        });
+    });
+</script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {

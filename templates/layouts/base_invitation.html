@@ -4,9 +4,13 @@
 <html lang="en">
 
 <head>
-{% include 'includes/head.html' %}
-{% block extrastyle %}{% endblock extrastyle %}
-{% block extrahead %}
+    {% block pre_loader %}
+        {% include 'includes/pre_loader.html' %}
+    {% endblock pre_loader %}
+
+    {% include 'includes/head.html' %}
+    {% block extrastyle %}{% endblock extrastyle %}
+    {% block extrahead %}
     <!-- Link to Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
     <!-- Bootstrap 5 CSS -->
@@ -18,7 +22,7 @@
             {{ item.background }};
         }
     </style>
-{% endblock extrahead %}
+    {% endblock extrahead %}
 </head>
 <body>
     <div class="container" style="overflow-x: hidden;">
