@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.core.validators import MinValueValidator
 from .models import Event, Participant, InvitationStyle
+from django.contrib.auth.forms import AuthenticationForm
 
 class EventForm(forms.ModelForm):
     class Meta:
@@ -120,3 +121,13 @@ class InvitationStyleForm(forms.ModelForm):
                 field.widget.attrs.update({'class': 'form-check mt-2 form-check-input'})
 
             field.widget.attrs.update({'autocomplete': 'off'})
+
+class CustomLoginForm(AuthenticationForm):
+    username = forms.CharField(
+        label='Username',
+        widget=forms.TextInput(attrs={'class': 'form-control mt-2 mb-2', 'placeholder': 'Enter your username'})
+    )
+    password = forms.CharField(
+        label='Password',
+        widget=forms.PasswordInput(attrs={'class': 'form-control mt-2 mb-2', 'placeholder': 'Enter your password'})
+    )

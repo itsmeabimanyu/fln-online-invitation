@@ -31,7 +31,17 @@
         <p class="text-md text-center"><strong>{{ item.event.location|title }}</strong></p>
         <p class="text-center"><a class="link-offset-2 link-underline link-underline-opacity-0" href="{{ item.event.maps_location }}">Show Maps</a></p>
     </div>
-    <div class="separator w-50 text-center">OR</div>
+</div>
+<div class="row">
+    <div class="col">
+        <hr>
+    </div>
+    <div class="col-auto text-uppercase d-flex align-items-center">Or</div>
+    <div class="col">
+        <hr>
+    </div>
+</div>
+<div>
     <div class="col-12 text-center">
         <img src="data:image/png;base64,{{ qr_image }}" alt="QR Code" class="w-50">
         <p class="mt-1 text-sm">Scan here</p>

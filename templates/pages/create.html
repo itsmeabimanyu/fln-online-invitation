@@ -46,7 +46,7 @@
                                     {% endfor %}
                                     <td>
                                         <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#act-{{ item.id }}">Options </button>
-                                        <div id="act-{{ item.id }}" class="collapse mt-2">
+                                        <div id="act-{{ item.id }}" class="collapse mt-1">
                                             {% for value in item.buttons_action %}
                                                 {{ value|safe  }}
                                             {% endfor %}

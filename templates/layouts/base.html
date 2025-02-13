@@ -10,7 +10,29 @@
 
 <head>
   {% include 'includes/head.html' %}
-  {% block extrastyle %}{% endblock extrastyle %}
+  {% block extrastyle %}
+  <style>
+    hr.dashed {
+        border-top: 2px dashed #999;
+    }
+  </style>
+  <style>
+    .card-img-container {
+      position: relative;
+    }
+    .card-img-container .card-img-top {
+      width: 100%;
+      height: auto;
+    }
+    .card-img-container .text-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+  </style>
+  {% endblock extrastyle %}
   {% block extrahead %}{% endblock extrahead %}
 </head>
 <body>

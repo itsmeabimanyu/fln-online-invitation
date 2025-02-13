@@ -5,61 +5,7 @@
 
 <head>
 {% include 'includes/head.html' %}
-{% block extrastyle %}
-<style>
-    hr.dashed {
-        border-top: 2px dashed #999;
-    }
-    
-    hr.hr-text {
-        position: relative;
-          border: none;
-          height: 1px;
-          background: #999;
-      }
-      
-    hr.hr-text::before {
-        content: attr(data-content);
-        display: inline-block;
-        background: #fff;
-        font-weight: bold;
-        font-size: 0.85rem;
-        color: #999;
-        border-radius: 30rem;
-        padding: 0.2rem 2rem;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-
-    .separator {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        color: inherit;  /* Warna garis akan mengikuti warna teks induk */
-        margin: 1rem 0;  /* Menambahkan margin untuk memberikan jarak */
-    }
-    
-    .separator::before,
-    .separator::after {
-        content: '';
-        flex: 1;
-        border-top: var(--bs-border-width) solid;
-        border-color: inherit;  /* Warna garis akan mengikuti warna teks induk */
-        opacity: 0.25;  /* Menambahkan transparansi pada garis */
-    }
-      
-    .separator:not(:empty)::before {
-        margin-right: 0.5em; /* Memberikan ruang antara garis kiri dan teks */
-    }
-    
-    .separator:not(:empty)::after {
-        margin-left: 0.5em; /* Memberikan ruang antara garis kanan dan teks */
-    }
-</style>
-{% endblock extrastyle %}
+{% block extrastyle %}{% endblock extrastyle %}
 {% block extrahead %}
     <!-- Link to Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
@@ -106,7 +52,7 @@
                     <!-- Footer -->
                     <div class="card-footer d-flex justify-content-center align-items-center text-secondary" style='{{ item.background }}'>
                         <div class="row w-100 align-items-center">
-                            <p class="card-text text-center">&copy; 2025 - IT Frina Lestari Nusantara, Inc. All rights reserved.</p>
+                            <p class="card-text text-center">{{ footer_copyright }}</p>
                         </div>
                     </div>
                 </div>

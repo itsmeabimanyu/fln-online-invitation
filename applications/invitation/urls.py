@@ -28,4 +28,8 @@ urlpatterns = [
     path('attendance/list/', views.AttendanceListView.as_view(), name='attendance_list'),
     path('attendance/scan/', views.AttendanceScanView.as_view(), name='attendance_scan'),
     path('get-participant/', views.GetParticipant, name='get_participant'),
+    
+    # Chapter: Login/Logout
+    path('login/', views.LoginView.as_view(), name='login'),
+    path('logout/', views.LogoutView.as_view(), name='logout'),
 ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

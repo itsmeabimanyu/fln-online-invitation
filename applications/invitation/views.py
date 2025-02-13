@@ -1,28 +1,33 @@
-from django.http import HttpResponseRedirect
+import os
+import qrcode
+import base64
+import json
+import ldap
+
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, UpdateView, View, CreateView, DetailView, TemplateView
-from .models import Event, Participant, InvitationStyle
-from .forms import EventForm, ParticipantForm, ParticipantRegisterForm, InvitationStyleForm
-from django.contrib.auth.mixins import LoginRequiredMixin
-import os
-from PIL import Image
-from io import BytesIO
 from django.core.files.base import ContentFile
 from django.contrib import messages
-import qrcode
-import base64
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-import json
 from django.utils import timezone
 from django.templatetags.static import static
 from django.http import Http404
+from django.contrib.auth.views import LoginView
+from django_auth_ldap.backend import LDAPBackend
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.conf import settings
 
+from .models import Event, Participant, InvitationStyle
+from .forms import EventForm, ParticipantForm, ParticipantRegisterForm, InvitationStyleForm, CustomLoginForm
+from PIL import Image
+from io import BytesIO
 
 # Create your views here.
 # Chapter: Event 
-class EventCreateView(CreateView):
+class EventCreateView(LoginRequiredMixin, CreateView):
     model = Event
     form_class = EventForm
     template_name = 'pages/mainpages/create.html'
@@ -65,7 +70,7 @@ class EventListView(ListView):
         return context
 '''
     
-class EventListView(ListView):
+class EventListView(LoginRequiredMixin, ListView):
     model = Event
     template_name = 'pages/mainpages/list.html'
     context_object_name = 'items'
@@ -93,11 +98,11 @@ class EventListView(ListView):
         # Content table action
         for item in context['items']:
             item.buttons_action = [
-                f"<button type='button' class='btn btn-sm btn-info w-100 mb-2' onclick='window.location.href=\"{reverse('invitation_create', args=[item.id])}\"'>Invitation</button>"
-                f"<button type='button' class='btn btn-sm btn-info w-100 mb-2' onclick='window.location.href=\"{reverse('participant_create', args=[item.id])}\"'>Participant</button>"
-                f"<button type='button' class='btn btn-sm btn-warning w-100 mb-2' onclick='window.location.href=\"{reverse('event_update', args=[item.id])}\"'>Edit</button>"
-                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_active else 'success'} w-100 mb-2'>{'Close' if item.is_active else 'Open'}</button>",
-                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-second-{item.id}' class='btn btn-sm btn-danger w-100 mb-2'>Delete</button>"
+                f"<button type='button' class='btn btn-sm btn-info w-100 mb-1' onclick='window.location.href=\"{reverse('invitation_create', args=[item.id])}\"'>Invitation</button>"
+                f"<button type='button' class='btn btn-sm btn-info w-100 mb-1' onclick='window.location.href=\"{reverse('participant_create', args=[item.id])}\"'>Participant</button>"
+                f"<button type='button' class='btn btn-sm btn-warning w-100 mb-1' onclick='window.location.href=\"{reverse('event_update', args=[item.id])}\"'>Edit</button>"
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_active else 'success'} w-100 mb-1'>{'Close' if item.is_active else 'Open'}</button>",
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-second-{item.id}' class='btn btn-sm btn-danger w-100 mb-1'>Delete</button>"
             ]
 
             # Content modal
@@ -112,7 +117,7 @@ class EventListView(ListView):
 
         return context
     
-class EventUpdateView(UpdateView):
+class EventUpdateView(LoginRequiredMixin, UpdateView):
     model = Event
     form_class = EventForm
     template_name = 'pages/mainpages/create.html'
@@ -140,7 +145,7 @@ class EventUpdateView(UpdateView):
         messages.success(self.request, 'Event updated successfully!')
         return super().form_valid(form)
     
-class SoftDeleteEventView(View):
+class SoftDeleteEventView(LoginRequiredMixin, View):
     def post(self, request, pk):
         item = get_object_or_404(Event, pk=pk)
         item.soft_delete() 
@@ -148,7 +153,7 @@ class SoftDeleteEventView(View):
         messages.success(self.request, 'Event deleted successfully!')
         return redirect('event_list')
 
-class CloseEventView(View):
+class CloseEventView(LoginRequiredMixin, View):
     def post(self, request, pk):
         item = get_object_or_404(Event, pk=pk)
         if item.is_active:
@@ -160,7 +165,7 @@ class CloseEventView(View):
         return redirect('event_list')
 
 # belum di pakai
-class ParticipantListView(ListView):
+class ParticipantListView(LoginRequiredMixin, ListView):
     model = Participant
     template_name = 'pages/participants_list.html'
     context_object_name = 'items_list'
@@ -261,7 +266,7 @@ class ParticipantCreateView(CreateView):
 """
 
 # Chapter: Participant
-class ParticipantCreateView(CreateView, ListView):
+class ParticipantCreateView(LoginRequiredMixin, CreateView, ListView):
     model = Participant
     form_class = ParticipantForm
     template_name = 'pages/create.html'
@@ -285,8 +290,8 @@ class ParticipantCreateView(CreateView, ListView):
         # Content table action
         for item in context['items']:
             item.buttons_action = [
-                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_approved else 'success'} w-100 mb-2'>{'Reject' if item.is_approved else 'Approve'}</button>",
-                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-second-{item.id}' class='btn btn-sm btn-danger w-100 mb-2'>Delete</button>"
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_approved else 'success'} w-100 mb-1'>{'Reject' if item.is_approved else 'Approve'}</button>",
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-second-{item.id}' class='btn btn-sm btn-danger w-100 mb-1'>Delete</button>"
             ]
 
             # Content modal
@@ -347,13 +352,13 @@ class ParticipantCreateView(CreateView, ListView):
 
         return redirect(self.request.META.get('HTTP_REFERER'))
     
-class ParticipantDeleteView(View):
+class ParticipantDeleteView(LoginRequiredMixin, View):
     def post(self, request, pk):
         item = get_object_or_404(Participant, pk=pk)
         item.delete() 
         return redirect(self.request.META.get('HTTP_REFERER'))
     
-class ParticipantApproveView(View):
+class ParticipantApproveView(LoginRequiredMixin, View):
     def post(self, request, pk):
         item = get_object_or_404(Participant, pk=pk)
 
@@ -365,7 +370,7 @@ class ParticipantApproveView(View):
 
         return redirect(self.request.META.get('HTTP_REFERER'))
 
-class ParticipantAttendanceView(View):
+class ParticipantAttendanceView(LoginRequiredMixin, View):
     def post(self, request, pk):
         item = get_object_or_404(Participant, pk=pk)
         if item.is_attending:
@@ -379,7 +384,7 @@ class ParticipantAttendanceView(View):
         return redirect(self.request.META.get('HTTP_REFERER'))
    
 # Chapter: Invitation
-class InvitationStyleCreateView(CreateView):
+class InvitationStyleCreateView(LoginRequiredMixin, CreateView):
     model = InvitationStyle
     form_class = InvitationStyleForm
     template_name = 'pages/mainpages/create.html'
@@ -415,7 +420,7 @@ class InvitationStyleCreateView(CreateView):
         form.save()
         return HttpResponseRedirect(reverse('invitation_detail', kwargs={'pk': self.event.pk}))
     
-class InvitationStyleUpdateView(UpdateView):
+class InvitationStyleUpdateView(LoginRequiredMixin, UpdateView):
     model = InvitationStyle
     form_class = InvitationStyleForm
     template_name = 'pages/mainpages/create.html'
@@ -554,7 +559,7 @@ class ParticipantSuccessRegisterView(TemplateView):
         return context
     
 # Chapter: Attendance
-class AttendanceListView(ListView):
+class AttendanceListView(LoginRequiredMixin, ListView):
     model = Participant
     template_name = 'pages/mainpages/list.html'
     context_object_name = 'items'
@@ -582,7 +587,7 @@ class AttendanceListView(ListView):
         # Content table action
         for item in context['items']:
             item.buttons_action = [
-                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_attending else 'success'} w-100 mb-2'>{'Not Attend' if item.is_attending else 'Attend'}</button>",
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_attending else 'success'} w-100 mb-1'>{'Not Attend' if item.is_attending else 'Attend'}</button>",
                 f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-third-{item.id}' class='btn btn-sm btn-info w-100'>Detail</button>"
             ]
 
@@ -612,7 +617,7 @@ class AttendanceListView(ListView):
         return context
  
 # Chapter: Attendance additional
-class AttendanceScanView(ListView):
+class AttendanceScanView(LoginRequiredMixin, ListView):
     model = Participant
     template_name = 'pages/additionals/attendance_scan.html'
     context_object_name = 'items'
@@ -655,11 +660,11 @@ def GetParticipant(request):
     return render(request, 'pages/partials/partial_scan.html', {'error': 'Invalid request method'})
 
 # Chapter: Dasboard
-class EventDashboardView(ListView):
+class EventDashboardView(LoginRequiredMixin, ListView):
     model = Event
     template_name = 'dashboards/events.html'
     context_object_name = 'items'
-    ordering = ['from_event_date']
+    ordering = ['-is_active', 'from_event_date']
     paginate_by = 4
 
     def get_queryset(self):
@@ -686,3 +691,56 @@ class EventDashboardView(ListView):
             item.additional_url_01 = f"<button type='button' class='dropdown-item' onclick='window.location.href=\"{reverse('participant_create', args=[item.id])}\"'>Participant</button>"
 
         return context
+
+# Chapter: Login
+class LoginView(LoginView):
+    template_name = 'layouts/base_login.html'
+    success_url = reverse_lazy('event_dashboard')
+    form_class = CustomLoginForm 
+
+    def get(self, request, *args, **kwargs):
+        if self.request.user.is_authenticated and self.request.user.is_active:
+            return redirect(self.success_url)  # Redirect to the home page if already authenticated
+        return super().get(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Sign in'
+        context['title_action'] = 'Sign in to your account to continue'
+        context['subtitle'] = 'Event Invitation'
+        return context
+
+    def form_valid(self, form):
+        # Pertama coba autentikasi LDAP
+        ldap_backend = LDAPBackend()
+        username = form.cleaned_data.get('username')
+        password = form.cleaned_data.get('password')
+
+        user = None
+        try:
+            user = ldap_backend.authenticate(self.request, username=username, password=password)
+        except ldap.LDAPError as e:
+            # Set pesan kesalahan untuk debugging
+            print(f"LDAP authentication error: {e}")
+
+        # Jika autentikasi LDAP gagal, coba autentikasi lokal
+        if user is None:
+            user = authenticate(self.request, username=username, password=password)
+
+        if user is not None:
+            login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
+            return redirect(self.get_success_url())
+        else:
+            # Tambahkan pesan kesalahan dan kembalikan form yang tidak valid
+            return self.form_invalid(form)
+
+    def form_invalid(self, form):
+        # Set pesan kesalahan untuk pengguna    
+        # messages.error(self.request, 'Login failed. Please check your username and password!')
+        return super().form_invalid(form)
+    
+class LogoutView(View):
+    def get(self, request, *args, **kwargs):
+        # logout(request)
+        request.session.flush()
+        return redirect(settings.LOGOUT_REDIRECT_URL)
