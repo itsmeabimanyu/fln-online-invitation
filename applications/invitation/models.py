@@ -9,9 +9,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.exceptions import ValidationError
 import string
 import random
-from django.contrib.auth import get_user_model
-
-User = get_user_model() 
+from django.contrib.auth.models import User
 
 def generate_short_code():
     """Membuat kode pendek acak sepanjang 6 karakter."""

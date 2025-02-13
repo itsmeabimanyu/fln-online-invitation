@@ -32,6 +32,8 @@ urlpatterns = [
     # Chapter: Login/Logout
     path('login/', views.LoginView.as_view(), name='login'),
     path('logout/', views.LogoutView.as_view(), name='logout'),
+    # Register
+    path('register/', views.RegisterView.as_view(), name='register'),
 
     # Short link
     path('<str:shortcode>/', views.redirect_shortlink, name='redirect_shortlink'),

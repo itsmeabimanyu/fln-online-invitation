@@ -18,7 +18,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
 
 from .models import Event, Participant, InvitationStyle
-from .forms import EventForm, ParticipantForm, ParticipantRegisterForm, InvitationStyleForm, CustomLoginForm
+from .forms import EventForm, ParticipantForm, ParticipantRegisterForm, InvitationStyleForm, CustomLoginForm, RegisterForm
 
 # Create your views here.
 def redirect_shortlink(request, shortcode):
@@ -144,8 +144,7 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
                 os.remove(old_image_path)
         messages.success(self.request, 'Event updated successfully!')
         return super().form_valid(form)
-
-    
+   
 class SoftDeleteEventView(LoginRequiredMixin, View):
     def post(self, request, pk):
         item = get_object_or_404(Event, pk=pk)
@@ -723,39 +722,67 @@ class LoginView(LoginView):
         context['title'] = 'Sign in'
         context['title_action'] = 'Sign in to your account to continue'
         context['subtitle'] = 'Event Invitation'
+        context["text_submit"] = "Login"
         return context
 
     def form_valid(self, form):
-        # Pertama coba autentikasi LDAP
-        ldap_backend = LDAPBackend()
-        username = form.cleaned_data.get('username')
-        password = form.cleaned_data.get('password')
-
-        user = None
-        try:
-            user = ldap_backend.authenticate(self.request, username=username, password=password)
-        except ldap.LDAPError as e:
-            # Set pesan kesalahan untuk debugging
-            print(f"LDAP authentication error: {e}")
-
-        # Jika autentikasi LDAP gagal, coba autentikasi lokal
-        if user is None:
-            user = authenticate(self.request, username=username, password=password)
-
+        # Cek login biasa (menggunakan database lokal)
+        username = form.cleaned_data['username']
+        password = form.cleaned_data['password']
+        
+        user = authenticate(self.request, username=username, password=password)
         if user is not None:
-            login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
-            return redirect(self.get_success_url())
+            login(self.request, user)
+            return super().form_valid(form)
         else:
-            # Tambahkan pesan kesalahan dan kembalikan form yang tidak valid
-            return self.form_invalid(form)
+            # Jika login biasa gagal, coba autentikasi menggunakan LDAP
+            ldap_user = self.authenticate_ldap(username, password)
+            if ldap_user:
+                # Jika login LDAP sukses, buat/mendapatkan user dari LDAP
+                user = self.create_or_get_user_from_ldap(username)
+                login(self.request, user)
+                return super().form_valid(form)
+            else:
+                form.add_error(None, 'Invalid credentials.')
+                return self.form_invalid(form)
 
-    def form_invalid(self, form):
-        # Set pesan kesalahan untuk pengguna    
-        # messages.error(self.request, 'Login failed. Please check your username and password!')
-        return super().form_invalid(form)
+    def authenticate_ldap(self, username, password):
+        try:
+            ldap_connection = ldap.initialize(settings.LDAP_SERVER)
+            ldap_connection.simple_bind_s(f"uid={username},ou=users,dc=example,dc=com", password)
+            return True  # Jika bind berhasil, dianggap login sukses
+        except ldap.LDAPError:
+            return False  # Jika gagal, return False
     
 class LogoutView(View):
     def get(self, request, *args, **kwargs):
         # logout(request)
         request.session.flush()
         return redirect(settings.LOGOUT_REDIRECT_URL)
+
+# Chapter Register for development
+class RegisterView(CreateView):
+    form_class = RegisterForm  # Form yang digunakan
+    template_name = 'layouts/base_login.html'  # Template untuk form registrasi
+    success_url = reverse_lazy('event_dashboard')  # URL tujuan setelah registrasi berhasil
+
+    def form_valid(self, form):
+        # Simpan user
+        user = form.save()
+
+        # Tentukan backend autentikasi secara manual
+        user.backend = 'django.contrib.auth.backends.ModelBackend'
+
+        # Login pengguna
+        login(self.request, user)
+
+        # Redirect ke halaman sukses
+        return redirect(self.success_url)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Sign up'
+        context['title_action'] = 'Sign up to your account to continue'
+        context['subtitle'] = 'Event Invitation'
+        context["text_submit"] = "Register"
+        return context

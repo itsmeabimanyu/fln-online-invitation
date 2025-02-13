@@ -5,7 +5,8 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.core.validators import MinValueValidator
 from .models import Event, Participant, InvitationStyle
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.models import User
 
 class EventForm(forms.ModelForm):
     class Meta:
@@ -131,3 +132,20 @@ class CustomLoginForm(AuthenticationForm):
         label='Password',
         widget=forms.PasswordInput(attrs={'class': 'form-control mt-2 mb-2', 'placeholder': 'Enter your password'})
     )
+
+class RegisterForm(UserCreationForm):
+    email = forms.EmailField()
+
+    class Meta:
+        model = User
+        fields = ["username", "email", "password1", "password2"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            if self.errors.get(field_name):
+                field.widget.attrs.update({'class': 'form-control mt-2 parsley-error'})
+            else:
+                field.widget.attrs.update({'class': 'form-control mt-2'})
+
+            field.widget.attrs.update({'autocomplete': 'off'})
