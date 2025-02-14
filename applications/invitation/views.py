@@ -16,6 +16,7 @@ from django_auth_ldap.backend import LDAPBackend
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
+from django.forms import modelformset_factory
 
 from .models import Event, Participant, InvitationStyle
 from .forms import EventForm, ParticipantForm, ParticipantRegisterForm, InvitationStyleForm, CustomLoginForm, RegisterForm
@@ -265,7 +266,101 @@ class ParticipantCreateView(CreateView):
         return redirect(self.request.META.get('HTTP_REFERER'))
 """
 
+# Chapter: Participant (Versi formset)
+class ParticipantCreateView(LoginRequiredMixin, CreateView, ListView):
+    model = Participant
+    form_class = ParticipantForm
+    template_name = 'pages/create.html'
+    context_object_name = 'items'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.event = get_object_or_404(Event, pk=self.kwargs.get('pk'))
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        # Panggil get_context_data dari parent class
+        context = super().get_context_data(**kwargs)
+        # Buat formset
+        participant_formset = modelformset_factory(self.model, form=self.form_class, extra=0)
+        formset = participant_formset(queryset=self.model.objects.all())
+        # Tambahkan formset ke context
+        context['formset'] = formset
+        # Tambahkan data lain ke context
+        context["title"] = "participant"
+        context["title_action"] = " Create"
+        context["subtitle"] = f"Participant: {self.event}"  # Pastikan self.event terdefinisi
+
+        # Content table action
+        # Tambahkan tombol aksi dan modal ke setiap form dalam formset
+        for form in formset:
+            item = form.instance
+            if item.guest_name:  # Jika form sudah ada (bukan form extra)
+                form.buttons_action = [
+                    f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_approved else 'success'} w-100 mb-1'>{'Reject' if item.is_approved else 'Approve'}</button>",
+                    f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-second-{item.id}' class='btn btn-sm btn-danger w-100 mb-1'>Delete</button>"
+                ]
+
+                # Modal content
+                form.modals_form = {
+                    'Reject Participant' if item.is_approved else 'Approve Participant': {
+                        'modal_id': f'modal-first-{item.id}',
+                        'action_url': reverse('participant_approve', kwargs={'pk': item.pk})
+                    },
+                    'Delete Participant': {
+                        'modal_id': f'modal-second-{item.id}',
+                        'action_url': reverse('participant_delete', kwargs={'pk': item.pk})
+                    }
+                }
+            
+            else:  # Jika form adalah form extra (kosong)
+                form.buttons_action = [
+                    "<button type='button' class='btn btn-sm btn-danger remove-form'>Remove</button>"
+                ]
+
+        # Content table
+        '''
+        context["first_td"] = [
+            '<td></td>',
+        ]
+
+        context["last_td"] = [
+            '<td></td>',
+        ]
+        '''
+
+        context["first_td_js"] = [
+            '',
+        ]
+
+        context["last_td_js"] = [
+            '<td></td>',
+            '<td></td>',
+        ]
+
+        context["fields"] = {
+            'is_approved': 'Approve?',
+            'approved_by': 'Approved by'
+        }
+        
+        return context
+
+    def post(self, request, *args, **kwargs):
+        participant_formset = modelformset_factory(Participant, form=ParticipantForm)
+        formset = participant_formset(request.POST)
+        if formset.is_valid():
+            for form in formset:
+                # Associate each participant with the event before saving
+                participant = form.save(commit=False)
+                participant.invitation = self.event
+                participant.save()
+            return redirect(self.request.META.get('HTTP_REFERER'))
+        else:
+            context = self.get_context_data()
+            context['formset'] = formset
+            return self.render_to_response(context)
+    
 # Chapter: Participant
+"""
 class ParticipantCreateView(LoginRequiredMixin, CreateView, ListView):
     model = Participant
     form_class = ParticipantForm
@@ -363,7 +458,7 @@ class ParticipantCreateView(LoginRequiredMixin, CreateView, ListView):
             )
 
         return redirect(self.request.META.get('HTTP_REFERER'))
-    
+ """   
 class ParticipantDeleteView(LoginRequiredMixin, View):
     def post(self, request, pk):
         item = get_object_or_404(Participant, pk=pk)

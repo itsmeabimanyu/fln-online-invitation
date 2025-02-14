@@ -22,8 +22,6 @@
             </div>
             <form method="post">
                 {% csrf_token %}
-                {{ formset.management_form }}
-                
                 <div class="card-body">
                     <div class="table-responsive">
                         <table id="tbl_participant" class="display row-border" style="width:100%">
@@ -32,51 +30,44 @@
                                     <!-- Checkbox Check All di header -->
                                     <th><input type="checkbox" class="form-check form-check-input item-checkbox" id="select-all"></th>
                                     <th>No</th> <!-- Kolom untuk nomor urut -->
-
-                                    {% for field in formset.0 %}
-                                        {% if field.name != 'id' %}  <!-- Hindari menampilkan kolom id -->
-                                            <th>{{ field.label }}</th>
-                                        {% endif %}
-                                    {% endfor %}
-
                                     {% for key, value in fields.items %}
                                     <th>{{ value }}</th>
                                     {% endfor %}
-
                                     <th style="width:10%">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for form in formset %}
+                                {% for item in items %}
                                 <tr>
-                                    {% if form.instance.pk %}
                                     <td><input type="checkbox" class="form-check form-check-input item-checkbox" name="approve" value="{{ item.id }}"></td>
-                                    {% endif %}
-
-                                    <td>{{ forloop.counter }}</td> <!-- Kolom untuk nomor urut -->
-                                    
-                                    {% for field in form %}
-                                        {% if field.name != 'id' %}
-                                            <td>{{ field }}</td>
-                                        {% endif %}
-                                    {% endfor %}
-
+                                    <td>{{ forloop.counter }}</td>
                                     {% for key, value in fields.items %}
-                                        <td>{{ form.instance|get_field_value:key|safe }}</td>
+                                    <td>{{ item|get_field_value:key|safe }}</td>
                                     {% endfor %}
-
-                                    {% if form.instance.pk %} 
                                     <td>
-                                        <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#act-{{ form.instance.id }}">Options </button>
-                                        <div id="act-{{ form.instance.id }}" class="collapse mt-1">
-                                            {% for value in form.buttons_action %}
+                                        <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#act-{{ item.id }}">Options </button>
+                                        <div id="act-{{ item.id }}" class="collapse mt-1">
+                                            {% for value in item.buttons_action %}
                                                 {{ value|safe  }}
                                             {% endfor %}
                                         </div>
                                     </td>
-                                    {% endif %}
                                 </tr>
                                 {% endfor %}
+                                <tr>
+                                    {% for value in first_add_td %}
+                                        {{ value|safe }}
+                                    {% endfor %}
+                                    <td>{{items|length|add:1}}</td>
+                                    {% for field in form %}
+                                        <td>{{ field }}</td>
+                                    {% endfor %}
+                                    {% for value in last_add_td %}
+                                        {{ value|safe }}
+                                    {% endfor %}
+                                    <td><button class="btn btn-danger btn-sm deleteRow"><i data-feather="trash-2"></i></button></td> 
+                                </tr>
+                                <!-- More rows can be added here -->
                             </tbody>
                         </table>
                     </div>
@@ -116,7 +107,7 @@
         $('#addRow').on('click', function() {
             // Membuat array untuk menyimpan data baris baru
             var newRow = [
-                {% for value in first_td_js %}
+                {% for value in first_add_td_js %}
                 '{{ value|escapejs }}',  // Checkbox di kolom pertama
                 {% endfor %}
                 table.rows().count() + 1,  // Nomor urut otomatis berdasarkan jumlah baris
@@ -128,7 +119,7 @@
             {% endfor %}
 
             // Menambahkan kolom kosong
-            {% for td in last_td_js %}
+            {% for td in last_add_td %}
                 newRow.push('{{ td|escapejs }}');
             {% endfor %}
         

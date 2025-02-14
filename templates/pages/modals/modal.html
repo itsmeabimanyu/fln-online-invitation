@@ -59,3 +59,30 @@
         {% endfor %}
     {% endfor %}
 {% endfor %}
+
+
+<!-- new modal -->
+{% for form in formset %}
+    {% for modal_title, modal_data in form.modals_form.items %}
+    <div class="modal fade" id="{{ modal_data.modal_id }}" tabindex="-1" aria-labelledby="{{ modal_data.modal_id }}Label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" action="{{ modal_data.action_url }}">
+                    {% csrf_token %}
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="{{ modal_data.modal_id }}Label">{{ modal_title }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to {{ modal_title|lower }}?<br><strong>{{ form.instance }}</strong></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-success">{{ modal_title }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endfor %}
