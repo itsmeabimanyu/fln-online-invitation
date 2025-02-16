@@ -1,69 +1,38 @@
 {% load static custom_filters %}
 {% for item in items %}
-<!-- Modal form -->
-    {% for key, value in item.modals_form.items %}
-        {% for modal_id, url in value.items %}
-        <div class="modal fade" id="{{ modal_id }}" tabindex="-1" aria-labelledby="{{ modal_id }}-title" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form method="post" action="{{ url }}">
-                        {% csrf_token %}
-                        <div class="modal-header">
-                            <p class="fs-4 modal-title" id="{{ modal_id }}-title">{{ key }}</p>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p class="fs-4">Are you sure you want to {{ key|lower }}?<br><strong>{{ item }}</strong></p>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-success">{{ key }}</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    {% endfor %}
-{% endfor %}
-
-{% for item in items %}
 <!-- Modal detail -->
-    {% for key, value in item.modals_detail.items %}
-        {% for modal_id, url in value.items %}
-        <div class="modal fade" id="{{ modal_id }}" tabindex="-1" aria-labelledby="{{ modal_id }}-title" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <p class="fs-4 modal-title" id="{{ modal_id }}-title">{{ key }}</p>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-xl-8">
-                                {% for field, value in fields.items %}
-                                <p class="fs-5">{{ value }}: <strong>{{ item|get_field_value:field|safe }}</strong></p>
-                                {% endfor %}
-                            </div>
-                            <div class="col-xl-4">
-                                {% if item.qr_image %}<img src="{{ item.qr_image }}" alt="QR Code" class="w-75">{% endif %}
-                            </div>
+    {% for modal_title, modal_data in item.modals_detail.items %}
+    <div class="modal fade" id="{{ modal_data.modal_id }}" tabindex="-1" aria-labelledby="{{ modal_data.modal_id }}Label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="{{ modal_data.modal_id }}Label">{{ modal_title }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-xl-8">
+                            {% for field, value in fields.items %}
+                            <p class="fs-5">{{ value }}: <strong>{{ item|get_field_value:field|safe }}</strong></p>
+                            {% endfor %}
+                        </div>
+                        <div class="col-xl-4">
+                            {% if item.qr_image %}<img src="{{ item.qr_image }}" alt="QR Code" class="w-100">{% endif %}
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
-        {% endfor %}
+    </div>
     {% endfor %}
 {% endfor %}
-
 
 <!-- new modal -->
-{% for form in formset %}
-    {% for modal_title, modal_data in form.modals_form.items %}
+{% for item in items %}
+    {% for modal_title, modal_data in item.modals_form.items %}
     <div class="modal fade" id="{{ modal_data.modal_id }}" tabindex="-1" aria-labelledby="{{ modal_data.modal_id }}Label" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">

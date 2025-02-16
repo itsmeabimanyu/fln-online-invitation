@@ -21,8 +21,10 @@ class EventForm(forms.ModelForm):
             'location': forms.TextInput(attrs={'placeholder': 'Enter event location'}),
             'event_name': forms.TextInput(attrs={'placeholder': 'Enter event name'}),
             'description': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Enter event description'}),
-            'from_event_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-            'to_event_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            # 'from_event_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            # 'to_event_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'from_event_date': forms.DateTimeInput(attrs={'placeholder': 'Enter from event date'}),
+            'to_event_date': forms.DateTimeInput(attrs={'placeholder': 'Enter to event date'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -32,6 +34,9 @@ class EventForm(forms.ModelForm):
                 field.widget.attrs.update({'class': 'form-control mt-2 parsley-error'})
             else:
                 field.widget.attrs.update({'class': 'form-control mt-2'})
+
+            if field_name in ['from_event_date', 'to_event_date']:
+                field.widget.attrs.update({'class': 'form-control datetime flatpickr-input'})
 
             field.widget.attrs.update({'autocomplete': 'off'})
             

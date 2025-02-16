@@ -42,6 +42,7 @@ class EventCreateView(LoginRequiredMixin, CreateView):
         context["title_action"] = "Create"
         context["subtitle"] = " Create View"
         context["text_submit"] = "Create"
+        context["enable_preview_image"] = True
         return context
     
     def form_valid(self, form):
@@ -109,11 +110,13 @@ class EventListView(LoginRequiredMixin, ListView):
 
             # Content modal
             item.modals_form = {
-               'Close Event' if item.is_active else 'Open Event': {
-                    f'modal-first-{item.id}': reverse('event_close', kwargs={'pk': item.pk})
+                'Close Event' if item.is_active else 'Open Event': {
+                    'modal_id': f'modal-first-{item.id}',
+                    'action_url': reverse('event_close', kwargs={'pk': item.pk})
                 },
                 'Delete Event': {
-                    f'modal-second-{item.id}': reverse('event_delete', kwargs={'pk': item.pk})
+                    'modal_id': f'modal-second-{item.id}',
+                    'action_url': reverse('event_delete', kwargs={'pk': item.pk})
                 }
             }
 
@@ -134,7 +137,9 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
         context["title_action"] = " Update"
         context["subtitle"] = f"Update: {self.object.event_name}"
         context["text_submit"] = "Update"
-        context["active_status"] = self.object.is_active
+        context["enable_preview_image"] = True
+        context["active_status"] = '<div class="badge bg-success">Open</div>' if self.object.is_active else '<div class="badge bg-secondary">Close</div>'
+        
         return context
     
     def form_valid(self, form):
@@ -185,190 +190,15 @@ class ParticipantListView(LoginRequiredMixin, ListView):
 
         return context
     
-"""
-class ParticipantCreateView(CreateView):
-    model = Participant
-    form_class = ParticipantForm
-    template_name = 'pages/create.html'
-    context_object_name = 'item'
-    success_url = reverse_lazy('event_list') 
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Participant"
-        context["title_action"] = " Create"
-        return context
-"""
-
-"""
-class ParticipantCreateView(CreateView):
-    model = Participant
-    form_class = ParticipantForm
-    template_name = 'pages/create.html'
-    context_object_name = 'item'
-
-    def dispatch(self, request, *args, **kwargs):
-        self.event = get_object_or_404(Event, pk=self.kwargs.get('pk'))
-        return super().dispatch(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "participant"
-        context["title_action"] = " Create"
-        context["active_status"] = self.event.is_active
-        context["event"] = self.event
-        object_item = self.model.objects.filter(invitation=self.event)
-        for item in object_item:
-            item.delete_url = reverse('participant_delete', kwargs={'pk': item.pk})
-            item.approve_url = reverse('participant_approve', kwargs={'pk': item.pk})
-            item.attendance_url = reverse('participant_attendance', kwargs={'pk': item.pk})
-            item.action = "reject" if item.is_approved else "approve"
-            item.action_attendance = "mark not attending" if item.is_attending else "mark attending"
-            item.action_color = "info" if item.is_approved else "secondary"
-        context["items"] = object_item
-        return context
-    
-    def form_valid(self, form):
-        # Mendapatkan input data untuk guest_name dan guest_email yang bisa berupa list
-        organizations = self.request.POST.getlist('organization')  # Menangani multiple guest_name
-        guest_names = self.request.POST.getlist('guest_name')  # Menangani multiple guest_name
-        emails = self.request.POST.getlist('email')  # Menangani multiple guest_email
-
-        # Pastikan jumlah guest_name dan guest_email cocok
-        '''
-        if len(guest_names):
-            for name, email, organization in zip(guest_names, guest_emails, organizations):
-                # Membuat Participant baru untuk setiap pasangan name dan email
-                Participant.objects.create(
-                    # organization=form.cleaned_data['organization'],
-                    invitation=self.event,
-                    organization=organization,
-                    guest_name=name,
-                    guest_email=email
-                )
-        else:
-            # Jika jumlah guest_name dan guest_email tidak cocok
-            form.add_error('guest_name', 'Jumlah guest_name dan guest_email tidak cocok.')
-
-            # Mengembalikan response jika ada error
-            return self.form_invalid(form)
-        '''
-        for name, email, organization in zip(guest_names, emails, organizations):
-            # Membuat Participant baru untuk setiap pasangan name dan email
-            Participant.objects.create(
-                # organization=form.cleaned_data['organization'],
-                invitation=self.event,
-                organization=organization,
-                guest_name=name,
-                email=email
-            )
-
-        return redirect(self.request.META.get('HTTP_REFERER'))
-"""
-
-# Chapter: Participant (Versi formset)
-class ParticipantCreateView(LoginRequiredMixin, CreateView, ListView):
-    model = Participant
-    form_class = ParticipantForm
-    template_name = 'pages/create.html'
-    context_object_name = 'items'
-
-    def dispatch(self, request, *args, **kwargs):
-        self.event = get_object_or_404(Event, pk=self.kwargs.get('pk'))
-        return super().dispatch(request, *args, **kwargs)
-    
-    def get_context_data(self, **kwargs):
-        # Panggil get_context_data dari parent class
-        context = super().get_context_data(**kwargs)
-        # Buat formset
-        participant_formset = modelformset_factory(self.model, form=self.form_class, extra=0)
-        formset = participant_formset(queryset=self.model.objects.all())
-        # Tambahkan formset ke context
-        context['formset'] = formset
-        # Tambahkan data lain ke context
-        context["title"] = "participant"
-        context["title_action"] = " Create"
-        context["subtitle"] = f"Participant: {self.event}"  # Pastikan self.event terdefinisi
-
-        # Content table action
-        # Tambahkan tombol aksi dan modal ke setiap form dalam formset
-        for form in formset:
-            item = form.instance
-            if item.guest_name:  # Jika form sudah ada (bukan form extra)
-                form.buttons_action = [
-                    f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_approved else 'success'} w-100 mb-1'>{'Reject' if item.is_approved else 'Approve'}</button>",
-                    f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-second-{item.id}' class='btn btn-sm btn-danger w-100 mb-1'>Delete</button>"
-                ]
-
-                # Modal content
-                form.modals_form = {
-                    'Reject Participant' if item.is_approved else 'Approve Participant': {
-                        'modal_id': f'modal-first-{item.id}',
-                        'action_url': reverse('participant_approve', kwargs={'pk': item.pk})
-                    },
-                    'Delete Participant': {
-                        'modal_id': f'modal-second-{item.id}',
-                        'action_url': reverse('participant_delete', kwargs={'pk': item.pk})
-                    }
-                }
-            
-            else:  # Jika form adalah form extra (kosong)
-                form.buttons_action = [
-                    "<button type='button' class='btn btn-sm btn-danger remove-form'>Remove</button>"
-                ]
-
-        # Content table
-        '''
-        context["first_td"] = [
-            '<td></td>',
-        ]
-
-        context["last_td"] = [
-            '<td></td>',
-        ]
-        '''
-
-        context["first_td_js"] = [
-            '',
-        ]
-
-        context["last_td_js"] = [
-            '<td></td>',
-            '<td></td>',
-        ]
-
-        context["fields"] = {
-            'is_approved': 'Approve?',
-            'approved_by': 'Approved by'
-        }
-        
-        return context
-
-    def post(self, request, *args, **kwargs):
-        participant_formset = modelformset_factory(Participant, form=ParticipantForm)
-        formset = participant_formset(request.POST)
-        if formset.is_valid():
-            for form in formset:
-                # Associate each participant with the event before saving
-                participant = form.save(commit=False)
-                participant.invitation = self.event
-                participant.save()
-            return redirect(self.request.META.get('HTTP_REFERER'))
-        else:
-            context = self.get_context_data()
-            context['formset'] = formset
-            return self.render_to_response(context)
-    
 # Chapter: Participant
-"""
 class ParticipantCreateView(LoginRequiredMixin, CreateView, ListView):
     model = Participant
     form_class = ParticipantForm
-    template_name = 'pages/create.html'
+    template_name = 'pages/mainpages/create_v2.html'
     context_object_name = 'items'
 
     def dispatch(self, request, *args, **kwargs):
-        self.event = get_object_or_404(Event, pk=self.kwargs.get('pk'))
+        self.event = get_object_or_404(Event, pk=self.kwargs.get('pk'), is_active=True, deleted_at__isnull=True)
         return super().dispatch(request, *args, **kwargs)
     
     def get_queryset(self):
@@ -385,41 +215,30 @@ class ParticipantCreateView(LoginRequiredMixin, CreateView, ListView):
         # Content table action
         for item in context['items']:
             item.buttons_action = [
-                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_approved else 'success'} w-100 mb-1'>{'Reject' if item.is_approved else 'Approve'}</button>",
-                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-second-{item.id}' class='btn btn-sm btn-danger w-100 mb-1'>Delete</button>"
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-01-{item.id}' class='btn btn-sm btn-info w-100 mb-1'>Send Email</button>" if item.is_approved else
+                f"<button type='button' class='btn btn-sm btn-warning w-100 mb-1' onclick='window.location.href=\"{reverse('participant_update', args=[item.id])}\"'>Edit</button>",
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-second-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_approved else 'success'} w-100 mb-1'>{'Reject' if item.is_approved else 'Approve'}</button>",
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-third-{item.id}' class='btn btn-sm btn-danger w-100 mb-1'>Delete</button>", 
             ]
 
             # Content modal
             item.modals_form = {
                 'Reject Participant' if item.is_approved else 'Approve Participant': {
-                    f'modal-first-{item.id}': reverse('participant_approve', kwargs={'pk': item.pk})
+                    'modal_id': f'modal-second-{item.id}',
+                    'action_url': reverse('participant_approve', kwargs={'pk': item.pk})
                 },
                 'Delete Participant': {
-                    f'modal-second-{item.id}': reverse('participant_delete', kwargs={'pk': item.pk})
+                    'modal_id': f'modal-third-{item.id}',
+                    'action_url': reverse('participant_delete', kwargs={'pk': item.pk})
                 }
             }
 
         # Content table
-        context["first_add_td"] = [
-            '<td></td>',
-        ]
-
-        context["first_add_td_js"] = [
-            '',
-        ]
-
-        context["last_add_td"] = [
-            '<td> </td>',
-            '<td> </td>'
-        ]
-
         context["fields"] = {
-            'guest_name': 'Guest Name',
-            'organization': 'Organization',
-            'email': 'Email',
             'is_approved': 'Approve?',
             'approved_by': 'Approved by'
         }
+
         return context
     
     def form_valid(self, form):
@@ -458,7 +277,34 @@ class ParticipantCreateView(LoginRequiredMixin, CreateView, ListView):
             )
 
         return redirect(self.request.META.get('HTTP_REFERER'))
- """   
+
+class ParticipantUpdateView(LoginRequiredMixin, UpdateView):
+    model = Participant
+    form_class = ParticipantForm
+    template_name = 'pages/mainpages/create.html'
+    context_object_name = 'items'
+
+    def dispatch(self, request, *args, **kwargs):
+        # event yang aktif dan tidak statusnya dihapus
+        self.participant = get_object_or_404(Participant, pk=self.kwargs.get('pk'), is_approved=False, invitation__deleted_at__isnull=True, invitation__is_active=True)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Participant"
+        # items = self.model.objects.filter(deleted_at__isnull=True)
+        # context["items"] = items
+        context["title_action"] = " Update"
+        context["subtitle"] = f"Update: {self.object}"
+        context["text_submit"] = "Update"
+        context["active_status"] = '<div class="badge bg-success">Approved</div>' if self.object.is_approved else '<div class="badge bg-secondary">Pending to Approve</div>'
+       
+        return context
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Participant updated successfully!')
+        return HttpResponseRedirect(reverse('participant_create', kwargs={'pk': self.participant.invitation.id}))
+
 class ParticipantDeleteView(LoginRequiredMixin, View):
     def post(self, request, pk):
         item = get_object_or_404(Participant, pk=pk)
@@ -520,6 +366,7 @@ class InvitationStyleCreateView(LoginRequiredMixin, CreateView):
         context["title_action"] = "create"
         context["subtitle"] = f'Create: {get_object_or_404(Event, id=self.event.id)}'
         context["text_submit"] = "Create & View"
+        context["enable_preview_image"] = True
         context["active_status"] = '<div class="badge bg-success">Open</div>' if self.event.is_active else '<div class="badge bg-secondary">Close</div>'
         return context
     
@@ -553,6 +400,7 @@ class InvitationStyleUpdateView(LoginRequiredMixin, UpdateView):
         context["title_action"] = "update"
         context["subtitle"] = f'Update: {self.object.event.event_name}'
         context["text_submit"] = "Update & View"
+        context["enable_preview_image"] = True
         context["active_status"] = '<div class="badge bg-success">Open</div>' if self.object.event.is_active else '<div class="badge bg-secondary">Close</div>'
         context["additional_button"] = f"<button type='button' class='btn btn-primary' onclick='window.location.href=\"{reverse('invitation_detail', args=[self.object.event.id])}\"'>View</button>"
         return context
@@ -697,18 +545,19 @@ class AttendanceListView(LoginRequiredMixin, ListView):
         for item in context['items']:
             item.buttons_action = [
                 f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_attending else 'success'} w-100 mb-1'>{'Not Attend' if item.is_attending else 'Attend'}</button>",
-                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-third-{item.id}' class='btn btn-sm btn-info w-100'>Detail</button>"
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-second-{item.id}' class='btn btn-sm btn-info w-100'>Detail</button>"
             ]
 
             # Content modal
             item.modals_form = {
                 'Mark as Absent' if item.is_attending else 'Mark as Present': {
-                    f'modal-first-{item.id}': reverse('participant_attendance', kwargs={'pk': item.pk})
-                },
+                    'modal_id': f'modal-first-{item.id}',
+                    'action_url': reverse('participant_attendance', kwargs={'pk': item.pk})
+                }
             }
             item.modals_detail = {
                 'Details Participant': {
-                    f'modal-third-{item.id}': ''
+                    'modal_id': f'modal-second-{item.id}',
                 },
             }
 

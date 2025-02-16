@@ -11,6 +11,7 @@
         <button class="btn btn-primary" type="button" onclick="window.history.back();">Back</button>
     </div>
 </div>
+
 <div class="row">
     <div class="col-xl-12">
         <div class="card mb-4 border">
@@ -24,10 +25,12 @@
                 {% csrf_token %}
                 <div class="card-body">
                 {{ form.as_p }}  <!-- This will render the form fields with labels and inputs -->
-                {% if item.image %}
-                <img id="preview" src="{{ item.image.url }}" class="card-img-top border rounded w-25" alt="Image of {{ item.name }}">
-                {% else %}
-                <img id="preview" src="{% static 'images/default_1280_720.jpg' %}" class="card-img-top border rounded w-25" alt="Default image">
+                {% if enable_preview_image %}
+                    {% if item.image %}
+                        <img id="preview" src="{{ item.image.url }}" class="card-img-top border rounded w-25" alt="Image of {{ item.name }}">
+                    {% else %}
+                        <img id="preview" src="{% static 'images/default_1280_720.jpg' %}" class="card-img-top border rounded w-25" alt="Default image">
+                    {% endif %}
                 {% endif %}
                 </div>
                 <div class="card-footer">

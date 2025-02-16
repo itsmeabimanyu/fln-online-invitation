@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load static %}
 {% comment %}
 {% load i18n static admin_datta %}
 {% get_current_language as LANGUAGE_CODE %}
@@ -69,6 +70,31 @@
 
   {% include 'includes/scripts.html' %}
   {% block extra_js %}
+  <!-- jQuery UI -->
+  <script src="{% static 'js/jquery-ui.js' %}"></script>
+  <!-- Timepicker Addon -->
+  <script src="{% static 'js/jquery-ui-timepicker-addon.min.js' %}"></script>
+  <script>
+      $(function () {
+          $('.datetimes').datetimepicker({
+              dateFormat: 'yy-mm-dd', // Format tanggal
+              timeFormat: 'HH:mm',   // Format waktu
+              timeInput: true,        // Izinkan input waktu manual
+              keyboardInput: true,    // Izinkan input dari keyboard
+          });
+      });
+  </script>
+
+  <!-- Flatpickr JS -->
+  <script src="{% static 'js/flatpickr' %}"></script>
+  <script>
+      flatpickr(".datetime", {
+          enableTime: true,       // Aktifkan waktu
+          dateFormat: "Y-m-d H:i", // Format tanggal dan waktu
+          time_24hr: true,        // Format 24 jam
+          allowInput: true,      // Izinkan input manual
+      });
+  </script>
   {% endblock extra_js %}
 
 </body>

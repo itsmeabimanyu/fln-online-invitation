@@ -16,6 +16,7 @@ urlpatterns = [
     # Chapter Participant
     path('participants/list/', views.ParticipantListView.as_view(), name='participant_list'),
     path('participants/create/<uuid:pk>/', views.ParticipantCreateView.as_view(), name='participant_create'),
+    path('participants/update/<uuid:pk>/', views.ParticipantUpdateView.as_view(), name='participant_update'),
     path('participants/delete/<uuid:pk>/', views.ParticipantDeleteView.as_view(), name='participant_delete'),
     path('participants/approve/<uuid:pk>/', views.ParticipantApproveView.as_view(), name='participant_approve'),
     path('participants/attendance/<uuid:pk>/', views.ParticipantAttendanceView.as_view(), name='participant_attendance'),
