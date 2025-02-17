@@ -1,4 +1,4 @@
-{% load static %}
+{% load static custom_filters %}
 <style>
     /*!
     * AdminKit PRO v3.4.0 (https://adminkit.io/)
@@ -28813,22 +28813,22 @@
             <li class="sidebar-header">
                 Main Menu
             </li>
-            <li class="sidebar-item">
+            <li class="sidebar-item {% if request.path|startswith:'/dashboard/' %}active{% endif %}">
                 <a data-bs-target="#pages" data-bs-toggle="collapse" class="sidebar-link collapsed">
                     <i class="align-middle" data-feather="sliders"></i> <span class="align-middle">Dashboard</span>
                 </a>
-                <ul id="pages" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                    <li class="sidebar-item"><a class="sidebar-link" href="{% url 'event_dashboard' %}">Events</a></li>
+                <ul id="pages" class="sidebar-dropdown list-unstyled collapse {% if request.path|startswith:'/dashboard/event/' %}show{% endif %}" data-bs-parent="#sidebar">
+                    <li class="sidebar-item {% if request.path|startswith:'/dashboard/event/' %}active{% endif %}"><a class="sidebar-link" href="{% url 'event_dashboard' %}">Events</a></li>
                 </ul>
             </li>
 
-            <li class="sidebar-item">
+            <li class="sidebar-item {% if request.path|startswith:'/attendance/' %}active{% endif %}">
                 <a class="sidebar-link" href="{% url 'attendance_list' %}">
                     <i class="align-middle" data-feather="users"></i> <span class="align-middle">Attendance</span>
                 </a>
             </li>
 
-            <li class="sidebar-item">
+            <li class="sidebar-item {% if request.path|startswith:'/events/' %}active{% endif %}">
                 <a class="sidebar-link" href="{% url 'event_list' %}">
                     <i class="align-middle" data-feather="calendar"></i> <span class="align-middle">Events</span>
                 </a>

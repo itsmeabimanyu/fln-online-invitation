@@ -6,7 +6,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     # URL for listing events
     # Chapter: Event
-    path('', views.EventDashboardView.as_view(), name='event_dashboard'),
+    path('dashboard/event/', views.EventDashboardView.as_view(), name='event_dashboard'),
     path('events/create/', views.EventCreateView.as_view(), name='event_create'),
     path('events/list/', views.EventListView.as_view(), name='event_list'),
     path('events/update/<uuid:pk>/', views.EventUpdateView.as_view(), name='event_update'),

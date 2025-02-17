@@ -20,6 +20,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
 from django.forms import modelformset_factory
 from django.core.mail import send_mass_mail, EmailMessage, send_mail, EmailMultiAlternatives
+from django.db.models import Count
 
 from .models import Event, Participant, InvitationStyle
 from .forms import EventForm, ParticipantForm, ParticipantRegisterForm, InvitationStyleForm, CustomLoginForm, RegisterForm
@@ -164,11 +165,13 @@ class EventListView(LoginRequiredMixin, ListView):
         # Content table action
         for item in context['items']:
             item.buttons_action = [
+                f"<button type='button' class='btn btn-sm btn-info w-100 mb-1' onclick='copyToClipboard(this)' data-short-link='{(item.short_link)}'>Copy Link</button>"
                 f"<button type='button' class='btn btn-sm btn-info w-100 mb-1' onclick='window.location.href=\"{reverse('invitation_create', args=[item.id])}\"'>Invitation</button>" if item.is_active else '',
                 f"<button type='button' class='btn btn-sm btn-info w-100 mb-1' onclick='window.location.href=\"{reverse('participant_create', args=[item.id])}\"'>Participant</button>" if item.is_active else '',
                 f"<button type='button' class='btn btn-sm btn-info w-100 mb-1' onclick='window.location.href=\"{reverse('event_update', args=[item.id])}\"'>Edit</button>" if item.is_active else '',
                 f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_active else 'info'} w-100 mb-1'>{'Close' if item.is_active else 'Open'}</button>",
-                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-second-{item.id}' class='btn btn-sm btn-danger w-100 mb-1'>Delete</button>"
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-second-{item.id}' class='btn btn-sm btn-danger w-100 mb-1'>Delete</button>",
+                
             ]
 
             # Content modal
@@ -780,6 +783,9 @@ class EventDashboardView(LoginRequiredMixin, ListView):
                 f"<button type='button' class='dropdown-item' onclick='window.location.href=\"{reverse('participant_create', args=[item.id])}\"'>Participant</button>",
                 f"<button type='button' class='dropdown-item' onclick='copyToClipboard(this)' data-short-link='{(item.short_link)}'>Copy Link</button>"
             ]
+
+            # total hadir
+            item.total_participant = f'{Participant.objects.filter(invitation=item, is_attending=True).count()} / {item.quota_limitation}'
 
         return context
 

@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 class EventForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ["event_name", "description", "location", "maps_location", "from_event_date", "to_event_date", "image"]
+        fields = ["event_name", "description", "location", "maps_location", "from_event_date", "to_event_date", "quota_limitation", "image"]
         widgets = {
             'image': forms.ClearableFileInput(attrs={
                 'id': 'imageInput',  # ID untuk input gambar

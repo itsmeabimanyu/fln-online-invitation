@@ -31,6 +31,7 @@ class Event(models.Model):
     is_active = models.BooleanField(default=True)
     short_link = models.CharField(max_length=10, unique=True, verbose_name="Short Link")
     submitter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_invitations')
+    quota_limitation = models.PositiveIntegerField(null=True, blank=True, verbose_name='Participant Quota*')
 
     def __str__(self):
         return self.event_name

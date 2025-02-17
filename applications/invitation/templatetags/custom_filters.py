@@ -28,3 +28,10 @@ def get_field_value(obj, attr_name):
     if value is None:
         return "--"
     return value
+
+@register.filter
+def startswith(value, arg):
+    """Mengembalikan True jika 'value' dimulai dengan 'arg'."""
+    if value:
+        return value.startswith(arg)
+    return False

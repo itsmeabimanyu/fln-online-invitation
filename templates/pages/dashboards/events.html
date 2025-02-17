@@ -29,32 +29,7 @@
                         <div class="dropdown-menu dropdown-menu-end" data-bs-popper="static">
                             {% for value in item.buttons_action %}
                                 {{ value|safe  }}
-                            {% endfor %}
-                            <script>
-                                function copyToClipboard(button) {
-                                    // Ambil protokol (http/https)
-                                    let protocol = window.location.protocol;
-
-                                    // Ambil domain/IP & port dari website saat ini
-                                    let host = window.location.host; // Contoh: "localhost:8000" atau "example.com"
-
-                                    // Ambil short link dari atribut data
-                                    let shortLink = button.getAttribute("data-short-link");
-
-                                    // Gabungkan menjadi URL lengkap
-                                    let fullURL = `${protocol}//${host}/${shortLink}`;
-
-                                    // Salin ke clipboard
-                                    navigator.clipboard.writeText(fullURL)
-                                        .then(() => {
-                                            alert('Link telah disalin: ' + fullURL);
-                                        })
-                                        .catch(err => {
-                                            console.error('Gagal menyalin', err);
-                                        });
-                                }
-                            </script>
-                    
+                            {% endfor %}        
                         </div>
                     </div>
                 </div>
@@ -73,12 +48,38 @@
             <div class="card-footer {% if not item.is_active  %}bg-secondary bg-opacity-25{% endif %}">
                 <div class="card-actions d-flex align-items-center justify-content-between w-100">
                     <!-- Badge di sebelah kiri -->
-                    {{ item.card_badge|safe }}
+                    {{ item.card_badge|safe }} {{ item.total_participant }}
                 </div>
             </div>
         </div>
     </div>
 {% endfor %}
 </div>
+<!--
+<script>
+    function copyToClipboard(button) {
+        // Ambil protokol (http/https)
+        let protocol = window.location.protocol;
+
+        // Ambil domain/IP & port dari website saat ini
+        let host = window.location.host; // Contoh: "localhost:8000" atau "example.com"
+
+        // Ambil short link dari atribut data
+        let shortLink = button.getAttribute("data-short-link");
+
+        // Gabungkan menjadi URL lengkap
+        let fullURL = `${protocol}//${host}/${shortLink}`;
+
+        // Salin ke clipboard
+        navigator.clipboard.writeText(fullURL)
+            .then(() => {
+                alert('Link telah disalin: ' + fullURL);
+            })
+            .catch(err => {
+                console.error('Gagal menyalin', err);
+            });
+    }
+</script> -->
+
 
 {% endblock content %}

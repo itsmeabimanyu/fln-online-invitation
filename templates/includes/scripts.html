@@ -87,6 +87,20 @@
         });
     });
 </script>
+<!-- Copy link -->
+<script>
+    function copyToClipboard(button) {
+        const fullURL = `${window.location.origin}/${button.getAttribute('data-short-link')}`;
+
+        navigator.clipboard.writeText(fullURL)
+            .then(() => {
+                Swal.fire('Copied!', fullURL, 'success');
+            })
+            .catch(() => {
+                Swal.fire('Error', 'Failed to copy link', 'error');
+            });
+    }
+</script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
