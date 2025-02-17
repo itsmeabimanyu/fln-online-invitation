@@ -22,8 +22,8 @@
 <script>
     {% for message in messages %}
         Swal.fire({
-            icon: 'success',
-            title: 'Success',
+            icon: '{{ message.tags }}',  // Gunakan message.tags sebagai icon
+            title: '{{ message.tags|title }}',  // Gunakan message.tags sebagai judul (dengan format title case)
             text: '{{ message }}',
         });
     {% endfor %}

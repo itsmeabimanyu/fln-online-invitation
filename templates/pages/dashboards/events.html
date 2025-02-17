@@ -27,7 +27,34 @@
                             <i class="align-middle" data-feather="more-horizontal"></i>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end" data-bs-popper="static">
-                            {{ item.additional_url|safe }}{{ item.additional_url_01|safe }}
+                            {% for value in item.buttons_action %}
+                                {{ value|safe  }}
+                            {% endfor %}
+                            <script>
+                                function copyToClipboard(button) {
+                                    // Ambil protokol (http/https)
+                                    let protocol = window.location.protocol;
+
+                                    // Ambil domain/IP & port dari website saat ini
+                                    let host = window.location.host; // Contoh: "localhost:8000" atau "example.com"
+
+                                    // Ambil short link dari atribut data
+                                    let shortLink = button.getAttribute("data-short-link");
+
+                                    // Gabungkan menjadi URL lengkap
+                                    let fullURL = `${protocol}//${host}/${shortLink}`;
+
+                                    // Salin ke clipboard
+                                    navigator.clipboard.writeText(fullURL)
+                                        .then(() => {
+                                            alert('Link telah disalin: ' + fullURL);
+                                        })
+                                        .catch(err => {
+                                            console.error('Gagal menyalin', err);
+                                        });
+                                }
+                            </script>
+                    
                         </div>
                     </div>
                 </div>

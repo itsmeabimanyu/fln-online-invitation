@@ -20,6 +20,7 @@ urlpatterns = [
     path('participants/delete/<uuid:pk>/', views.ParticipantDeleteView.as_view(), name='participant_delete'),
     path('participants/approve/<uuid:pk>/', views.ParticipantApproveView.as_view(), name='participant_approve'),
     path('participants/attendance/<uuid:pk>/', views.ParticipantAttendanceView.as_view(), name='participant_attendance'),
+    path('participants/attendance/invitation/<uuid:pk>/', views.ParticipantAttendanceInviteView.as_view(), name='attendance_invitation'),
 
     # Chapter: Invitation
     path('invitation/create/<uuid:pk>/', views.InvitationStyleCreateView.as_view(), name='invitation_create'),

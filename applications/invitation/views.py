@@ -1,8 +1,10 @@
+import imgkit
 import os, base64, json, qrcode, ldap
 from io import BytesIO
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
+from smtplib import SMTPException
 
-from django.http import HttpResponseRedirect, JsonResponse, Http404
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, UpdateView, View, CreateView, DetailView, TemplateView
@@ -17,14 +19,75 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
 from django.forms import modelformset_factory
+from django.core.mail import send_mass_mail, EmailMessage, send_mail, EmailMultiAlternatives
 
 from .models import Event, Participant, InvitationStyle
 from .forms import EventForm, ParticipantForm, ParticipantRegisterForm, InvitationStyleForm, CustomLoginForm, RegisterForm
 
 # Create your views here.
+company = 'PT. Frina Lestari Nusantara'
+
 def redirect_shortlink(request, shortcode):
     shortlink = get_object_or_404(Event, short_link=shortcode, deleted_at__isnull=True, is_active=True)
     return redirect(reverse_lazy('invitation_detail', kwargs={'pk': shortlink.id}))
+
+def generate_qr_code_base64(data):
+    """
+    Membuat QR code dari data dan mengembalikannya sebagai base64.
+    """
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(data)
+    qr.make(fit=True)
+
+    qr_img = qr.make_image(fill_color="black", back_color="white")
+    buffered = BytesIO()
+    qr_img.save(buffered, format="PNG")
+    qr_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
+    return qr_base64
+
+def generate_invitation_html(item, invitation):
+    """
+    Membuat HTML undangan dengan QR code yang disisipkan.
+    """
+    qr_base64 = generate_qr_code_base64(str(item.id))
+    # Mengonversi gambar ke base64
+    # Pastikan gambar ada sebelum mengakses URL
+    if invitation.image:
+        image_path = invitation.image.path  # Path ke file gambar
+        with open(image_path, "rb") as image_file:
+            image_base64 = base64.b64encode(image_file.read()).decode("utf-8")
+        image_src = f"data:image/png;base64,{image_base64}"
+    else:
+        image_src = ""  # Jika tidak ada gambar, kosongkan src
+
+    html_content = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; background-color: #f4f4f4'; padding: 20px;">
+            <table style="width: 100%; max-width: 400px; background: {'#353744' if invitation.enable_dark_mode else '#fff'}; padding: 20px; border-radius: 10px; 
+                        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); text-align: center;">
+                <tr>
+                    <td>
+                        <h2 style="color: {'#bdc4c9' if invitation.enable_dark_mode else '#fff'};">Attendance Invitation</h2>
+                        <img src="{image_src}" alt="Event Image" style="max-width: 300px; margin-top: 5px;">
+                        <p style="color: {'#bdc4c9' if invitation.enable_dark_mode else '#fff'}; font-size: 14px;">{item.invitation}</p>
+                        <p style="color: {'#bdc4c9' if invitation.enable_dark_mode else '#fff'}; font-size: 14px;"><b>Organization:</b> {item.organization}</p>
+                        <p style="color: {'#bdc4c9' if invitation.enable_dark_mode else '#fff'}; font-size: 14px;"><b>Name:</b> {item.guest_name}</p>
+                        <hr style="margin: 15px 0; border: none; height: 1px; background: #ddd;">
+                        <p style="font-size: 12px; color: #888;">Thank you for your attention, and we look forward to seeing you at the event.</p>
+                        <!-- Sisipkan QR code di sini -->
+                        <img src="data:image/png;base64,{qr_base64}" alt="QR Code" style="width: 100px; height: 100px; margin-top: 20px;">
+                    </td>
+                </tr>
+            </table>
+        </body>
+    </html>
+    """
+    return html_content
 
 # Chapter: Event 
 class EventCreateView(LoginRequiredMixin, CreateView):
@@ -101,10 +164,10 @@ class EventListView(LoginRequiredMixin, ListView):
         # Content table action
         for item in context['items']:
             item.buttons_action = [
-                f"<button type='button' class='btn btn-sm btn-info w-100 mb-1' onclick='window.location.href=\"{reverse('invitation_create', args=[item.id])}\"'>Invitation</button>"
-                f"<button type='button' class='btn btn-sm btn-info w-100 mb-1' onclick='window.location.href=\"{reverse('participant_create', args=[item.id])}\"'>Participant</button>"
-                f"<button type='button' class='btn btn-sm btn-warning w-100 mb-1' onclick='window.location.href=\"{reverse('event_update', args=[item.id])}\"'>Edit</button>"
-                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_active else 'success'} w-100 mb-1'>{'Close' if item.is_active else 'Open'}</button>",
+                f"<button type='button' class='btn btn-sm btn-info w-100 mb-1' onclick='window.location.href=\"{reverse('invitation_create', args=[item.id])}\"'>Invitation</button>" if item.is_active else '',
+                f"<button type='button' class='btn btn-sm btn-info w-100 mb-1' onclick='window.location.href=\"{reverse('participant_create', args=[item.id])}\"'>Participant</button>" if item.is_active else '',
+                f"<button type='button' class='btn btn-sm btn-info w-100 mb-1' onclick='window.location.href=\"{reverse('event_update', args=[item.id])}\"'>Edit</button>" if item.is_active else '',
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_active else 'info'} w-100 mb-1'>{'Close' if item.is_active else 'Open'}</button>",
                 f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-second-{item.id}' class='btn btn-sm btn-danger w-100 mb-1'>Delete</button>"
             ]
 
@@ -144,10 +207,14 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
     
     def form_valid(self, form):
         form.instance.submitter = self.request.user
+        
+        # Pastikan gambar diubah dan gambar lama ada
         if 'image' in form.changed_data:  # Pastikan gambar diubah
-            old_image_path = self.get_object().image.path
-            if os.path.exists(old_image_path):
-                os.remove(old_image_path)
+            if self.get_object().image:  # Periksa apakah gambar lama ada
+                old_image_path = self.get_object().image.path
+                if os.path.exists(old_image_path):
+                    os.remove(old_image_path)
+        
         messages.success(self.request, 'Event updated successfully!')
         return super().form_valid(form)
    
@@ -215,10 +282,10 @@ class ParticipantCreateView(LoginRequiredMixin, CreateView, ListView):
         # Content table action
         for item in context['items']:
             item.buttons_action = [
-                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-01-{item.id}' class='btn btn-sm btn-info w-100 mb-1'>Send Email</button>" if item.is_approved else
-                f"<button type='button' class='btn btn-sm btn-warning w-100 mb-1' onclick='window.location.href=\"{reverse('participant_update', args=[item.id])}\"'>Edit</button>",
-                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-second-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_approved else 'success'} w-100 mb-1'>{'Reject' if item.is_approved else 'Approve'}</button>",
-                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-third-{item.id}' class='btn btn-sm btn-danger w-100 mb-1'>Delete</button>", 
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-01-{item.id}' class='btn btn-sm btn-info w-100 mb-1' onclick='window.location.href=\"{reverse('attendance_invitation', args=[item.id])}\"'>Send Email</button>" if item.is_approved else
+                f"<button type='button' class='btn btn-sm btn-info w-100 mb-1' onclick='window.location.href=\"{reverse('participant_update', args=[item.id])}\"'>Edit</button>",
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-second-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_approved else 'info'} w-100 mb-1'>{'Reject' if item.is_approved else 'Approve'}</button>" if not item.is_email_sent else '',
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-third-{item.id}' class='btn btn-sm btn-danger w-100 mb-1'>Delete</button>" if not item.is_approved else '', 
             ]
 
             # Content modal
@@ -302,6 +369,7 @@ class ParticipantUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
+        form.save()
         messages.success(self.request, 'Participant updated successfully!')
         return HttpResponseRedirect(reverse('participant_create', kwargs={'pk': self.participant.invitation.id}))
 
@@ -337,7 +405,68 @@ class ParticipantAttendanceView(LoginRequiredMixin, View):
             item.mark_attendance()
             messages.success(request, 'Attendance marked successfully.')  # Success message
         return redirect(self.request.META.get('HTTP_REFERER'))
-   
+
+class ParticipantAttendanceInviteView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        # Ambil objek Participant berdasarkan pk
+        item = get_object_or_404(Participant, pk=pk)
+        invitation = InvitationStyle.objects.get(event=item.invitation.id)
+        # Data email
+        subject = f'Attendance Invitation: {item.guest_name} - {item.invitation}'
+        from_email = 'no-reply@fln.co.id'
+        recipient_list = [item.email]
+
+        # Generate HTML dengan QR code
+        html_content = generate_invitation_html(item, invitation)
+        # Konversi HTML ke gambar menggunakan imgkit
+        options = {
+            'format': 'png',
+            'encoding': 'UTF-8',
+            'width': '400',  # Sesuaikan dengan lebar yang diinginkan
+        }
+        image_bytes = imgkit.from_string(html_content, False, options=options)
+        # Simpan gambar ke BytesIO
+        image_stream = BytesIO(image_bytes)
+        image_stream.seek(0)
+
+        event_date = item.invitation.from_event_date.strftime("%A, %d %B %Y") if item.invitation.from_event_date.date() == item.invitation.to_event_date.date() else item.invitation.from_event_date.strftime("%A, %d %B %Y") - item.invitation.to_event_date.strftime("%A, %d %B %Y")
+        event_time = item.invitation.from_event_date.strftime("%I:%M %p") if item.invitation.from_event_date.date() == item.invitation.to_event_date.date() else item.invitation.from_event_date.strftime("%I:%M %p") - item.invitation.to_event_date.strftime("%I:%M %p")
+        if item.invitation.maps_location:
+            maps_location = f'<div>To view the location on Maps, click <a href="{item.invitation.maps_location}" target="_blank">here</a>.</div>'
+        else:
+            maps_location = ''
+
+        # Konten email dalam format HTML
+        email_body = f"""
+        <html>
+            <body>
+                <p>Dear Mr./Mrs./Miss <strong>{item.guest_name}</strong>,</p>
+                <div>We are pleased to invite you to <strong>{item.invitation}</strong> on 
+                <strong>{event_date}</strong> at <strong>{event_time}</strong>.</div>
+                <div>The event will take place at <strong>{item.invitation.location}</strong>.</div>
+                {maps_location}
+                <p>Looking forward to seeing you there!</p>
+                <p>Best regards,<br>Admin<br>{company}</p>
+            </body>
+        </html>
+        """
+
+        try:
+            # Membuat email dengan format HTML
+            email = EmailMultiAlternatives(subject, "", from_email, recipient_list)
+            email.attach_alternative(email_body, "text/html")
+            # Lampirkan gambar (dari memori)
+            email.attach(f"Attendance_Invitation_{item.guest_name}_{str(item.invitation).replace(' ', '_')}.png", image_stream.getvalue(), "image/png")
+            # Kirim email
+            email.send()
+            item.is_email_sent = True
+            item.save()
+            messages.success(request, 'Email sent successfully!')
+        except SMTPException as e:
+            messages.error(request, f'Failed to send email: {str(e)}')  # Success message
+
+        return redirect(self.request.META.get('HTTP_REFERER'))
+
 # Chapter: Invitation
 class InvitationStyleCreateView(LoginRequiredMixin, CreateView):
     model = InvitationStyle
@@ -544,7 +673,7 @@ class AttendanceListView(LoginRequiredMixin, ListView):
         # Content table action
         for item in context['items']:
             item.buttons_action = [
-                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_attending else 'success'} w-100 mb-1'>{'Not Attend' if item.is_attending else 'Attend'}</button>",
+                f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-first-{item.id}' class='btn btn-sm btn-{'secondary' if item.is_attending else 'info'} w-100 mb-1'>{'Not Attend' if item.is_attending else 'Attend'}</button>",
                 f"<button type='button' data-bs-toggle='modal' data-bs-target='#modal-second-{item.id}' class='btn btn-sm btn-info w-100'>Detail</button>"
             ]
 
@@ -645,8 +774,12 @@ class EventDashboardView(LoginRequiredMixin, ListView):
             item.card_title = item.event_name
             item.card_subtitle = item.description
             item.card_badge = '<span class="badge bg-success">Open</span>' if item.is_active else '<span class="badge bg-secondary">Close</span>'
-            item.additional_url = f"<button type='button' class='dropdown-item' onclick='window.location.href=\"{reverse('invitation_create', args=[item.id])}\"'>Invitation</button>"
-            item.additional_url_01 = f"<button type='button' class='dropdown-item' onclick='window.location.href=\"{reverse('participant_create', args=[item.id])}\"'>Participant</button>"
+
+            item.buttons_action = [
+                f"<button type='button' class='dropdown-item' onclick='window.location.href=\"{reverse('invitation_create', args=[item.id])}\"'>Invitation</button>",
+                f"<button type='button' class='dropdown-item' onclick='window.location.href=\"{reverse('participant_create', args=[item.id])}\"'>Participant</button>",
+                f"<button type='button' class='dropdown-item' onclick='copyToClipboard(this)' data-short-link='{(item.short_link)}'>Copy Link</button>"
+            ]
 
         return context
 

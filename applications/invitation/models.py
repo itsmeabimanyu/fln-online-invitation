@@ -100,18 +100,16 @@ class Participant(models.Model):
     # Informasi tamu
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     invitation = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="guests", verbose_name="Undangan")
-    # organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="Instansi")
     organization = models.CharField(max_length=255, blank=True, null=True, verbose_name="Organization")
     guest_name = models.CharField(max_length=255, verbose_name="Name*")
     email = models.EmailField(validators=[EmailValidator()], blank=True, null=True, verbose_name="Email")
     is_attending = models.BooleanField(default=False, verbose_name="Is attending")
     attendance_time = models.DateTimeField(null=True, blank=True)
-    # additional_guests = models.PositiveIntegerField(default=0, verbose_name="Tamu Tambahan")
-    # special_requests = models.TextField(blank=True, null=True, verbose_name="Permintaan Khusus")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Dibuat Pada")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Diperbarui Pada")
     is_approved = models.BooleanField(default=False, verbose_name="Approve?")
     approved_by =  models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name='approved_by')
+    is_email_sent = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.guest_name}"
