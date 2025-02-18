@@ -538,8 +538,23 @@ class InvitationStyleUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
+        instance = self.get_object()  # Ambil instance yang sedang diedit
+
+        # Handle penghapusan gambar lama jika ada perubahan pada field 'image'
+        if 'image' in form.changed_data and instance.image:
+            old_image_path = instance.image.path
+            if os.path.exists(old_image_path):
+                os.remove(old_image_path)
+
+        # Handle penghapusan gambar lama jika ada perubahan pada field 'appreciation_image'
+        if 'appreciation_image' in form.changed_data and instance.appreciation_image:
+            old_appreciation_image_path = instance.appreciation_image.path
+            if os.path.exists(old_appreciation_image_path):
+                os.remove(old_appreciation_image_path)
+
         invitation_style = form.save(commit=False)
         invitation_style.save()
+
         return HttpResponseRedirect(reverse('invitation_detail', kwargs={'pk': self.object.event.id}))
 
 # Chapter: Invitation additional

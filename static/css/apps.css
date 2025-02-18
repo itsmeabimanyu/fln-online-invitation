@@ -14428,7 +14428,7 @@ body[data-theme=colored] a.sidebar-link svg {
     padding:.625rem 1.5rem .625rem 5.75rem
 }
 .sidebar-link:focus {
-    outline:0
+    outline:0;
 }
 .sidebar-link:hover {
     background:#222e3c;
@@ -14472,9 +14472,11 @@ body[data-theme=colored] .sidebar-link:hover svg {
 }
 .sidebar-item.active .sidebar-link:hover,
 .sidebar-item.active>.sidebar-link {
-    background:linear-gradient(90deg,rgba(59,125,221,.1),rgba(59,125,221,.088) 50%,transparent);
-    border-left-color:#3b7ddd;
-    color:#e9ecef
+    /* background:linear-gradient(90deg,rgba(59,125,221,.1),rgba(59,125,221,.088) 50%,transparent);
+    border-left-color:#3b7ddd; */
+    background: linear-gradient(to right, #2c3e50, #34495e);
+    border-left-color:#f5b7b1;
+    color:#f5b7b1
 }
 body[data-theme=dark] .sidebar-item.active .sidebar-link:hover,
 body[data-theme=dark] .sidebar-item.active>.sidebar-link {
@@ -14519,6 +14521,7 @@ body[data-theme=dark] .sidebar-item.active .sidebar-link:hover svg,
 body[data-theme=dark] .sidebar-item.active>.sidebar-link i,
 body[data-theme=dark] .sidebar-item.active>.sidebar-link svg {
     color:#e9ecef
+    /* color:#f5b7b1 */
 }
 body[data-theme=light] .sidebar-item.active .sidebar-link:hover i,
 body[data-theme=light] .sidebar-item.active .sidebar-link:hover svg,
@@ -14555,7 +14558,8 @@ body[data-theme=light] .sidebar-dropdown .sidebar-link {
     background:transparent
 }
 .sidebar-dropdown .sidebar-link:before {
-    content:"→";
+    /* content:"⇒"; */
+    content:"\2022";
     display:inline-block;
     left:-14px;
     position:relative;
@@ -14588,7 +14592,7 @@ body[data-theme=light] .sidebar-dropdown .sidebar-item .sidebar-link:hover {
 .sidebar-dropdown .sidebar-item.active .sidebar-link {
     background:transparent;
     border-left:0;
-    color:#518be1;
+    color:#f5b7b1;
     font-weight:400
 }
 body[data-theme=dark] .sidebar-dropdown .sidebar-item.active .sidebar-link,
